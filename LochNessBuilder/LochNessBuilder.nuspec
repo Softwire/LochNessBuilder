@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>LochNessBuilder.dll</id>
+    <version>1.0.0</version>
+    <authors>JOA</authors>
+    <owners>JOA</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A Builder library to automate the creation of objects for testing purposes</description>
+    <releaseNotes>Initial Release Version</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags></tags>
+  </metadata>
+</package>
