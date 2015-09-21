@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>LochNessBuilder.dll</id>
+    <id>LochNessBuilder</id>
     <version>1.0.0</version>
     <authors>JOA</authors>
     <owners>JOA</owners>
