@@ -51,6 +51,13 @@ IEnumerable<Widget> seqWidgets = WidgetBuilder.New
     .Build(3);
 // seqWidgets have Ids 1, 2, 3 and Names "0", "1", "2"
 ```
+Sometimes you may need a stateful Builder - for example, if there are constraints on uniqueness of certain properties. 
+```
+// In the enclosing class
+private Builder<Widget> widgetBuilder = WidgetBuilder.New;
+// Then use this form in methods instead
+Widget testWidget = widgetBuilder.Build();
+```
 ### Variations on the Builder
 The builder can also be customised to build things differently. You can use factories (`withFactory`), setup (`withSetup`), post-build setup (`withPostBuildSetup`), collections (`withCollection`)
 
