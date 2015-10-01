@@ -15,7 +15,7 @@ using LochNessBuilder;
           {
               return Builder<Monster>.New
                   .With(t => t.Id, Enumerable.Range(1, int.MaxValue))
-                  .With(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Unit {i}"));
+                  .With(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Name {i}"));
           }
       }
   }
@@ -30,7 +30,7 @@ How you would then build a number of `Monster`s for use in tests (using types in
 ```
 // To build a single Monster
 Monster testMonster = MonsterBuilder.New.Build();
-// testMonster has Id = 1, Name = "Unit 1"
+// testMonster has Id = 1, Name = "Name 1"
 ```
 ```
 // To build an enumerable of Monsters
