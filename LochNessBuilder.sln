@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LochNessBuilder", "LochNessBuilder\LochNessBuilder.csproj", "{0F829C68-F7D1-48E9-8A85-2EC64E578AF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LochNessBuilder", "LochNessBuilder\LochNessBuilder.csproj", "{A3046A99-9AEA-478D-A258-37D1D4672D4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0F829C68-F7D1-48E9-8A85-2EC64E578AF8}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{0F829C68-F7D1-48E9-8A85-2EC64E578AF8}.Debug|Any CPU.Build.0 = Release|Any CPU
-		{0F829C68-F7D1-48E9-8A85-2EC64E578AF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F829C68-F7D1-48E9-8A85-2EC64E578AF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3046A99-9AEA-478D-A258-37D1D4672D4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3046A99-9AEA-478D-A258-37D1D4672D4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3046A99-9AEA-478D-A258-37D1D4672D4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3046A99-9AEA-478D-A258-37D1D4672D4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
