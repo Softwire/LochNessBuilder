@@ -1,6 +1,14 @@
 # LochNessBuilder
 A C# Builder library to automate creation of objects for tests
 
+## Use in a .Net Framework project
+
+As of version 2.0, this library has been migrated to .Net standard, to enable use in .Net core projects.
+
+To continue consuming this library from a .Net Framework project, the following reference will need to be added to the `.csproj` file:
+
+`<Reference Include="netstandard" />`
+
 ### Examples
 The builder for a number of `Monster`s:
 ```
