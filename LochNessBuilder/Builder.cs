@@ -142,8 +142,18 @@ namespace LochNessBuilder
             var instance = GetInstance();
             var prop = GetProp(selector, instance);
             Expression<Func<TProp>> valueInvoker = () => value();
+            Expression setExpression;
 
-            var setExpression = Expression.Assign(prop, Expression.Invoke(valueInvoker));
+            var unaryExpression = selector.Body as UnaryExpression;
+            if (unaryExpression != null && unaryExpression.NodeType == ExpressionType.Convert)
+            {
+                setExpression = Expression.Convert(valueInvoker.Body, typeof(TProp));
+            }
+            else
+            {
+                setExpression = Expression.Assign(prop, Expression.Invoke(valueInvoker));
+            }
+
             var setLambda = Expression.Lambda<Action<TInstance>>(setExpression, instance).Compile();
 
             return new Builder<TInstance>(Blueprint.Plus(setLambda), PostBuildBlueprint);
