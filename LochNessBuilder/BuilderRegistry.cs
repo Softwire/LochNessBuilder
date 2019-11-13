@@ -10,7 +10,7 @@ namespace LochNessBuilder
     /// </summary>
     static class BuilderRegistry
     {
-        private static readonly Dictionary<Type, Type> Builders = new Dictionary<Type, Type>();
+        private static readonly Dictionary<Type, MethodInfo> BuilderFactoryMethods = new Dictionary<Type, MethodInfo>();
 
         static BuilderRegistry()
         {
@@ -20,20 +20,20 @@ namespace LochNessBuilder
             {
                 var newMethod = builder.GetProperty("New", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
                 var instanceType = newMethod.ReturnType.GetGenericArguments()[0];
-                Builders.Add(instanceType, builder);
+                BuilderFactoryMethods.Add(instanceType, newMethod);
             }
         }
 
         public static Builder<TInstance> Resolve<TInstance>() where TInstance : class, new()
         {
-            if (!Builders.ContainsKey(typeof(TInstance)))
+            if (!BuilderFactoryMethods.ContainsKey(typeof(TInstance)))
             {
+                //Return a blank builder, which will just create `new TInstance()`.
                 return Builder<TInstance>.New;
             }
 
-            var builderType = Builders[typeof(TInstance)];
-            var newMethod = builderType.GetProperty("New", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
-            return newMethod.Invoke(null, null) as Builder<TInstance>;
+            var builderFactoryMethod = BuilderFactoryMethods[typeof(TInstance)];
+            return builderFactoryMethod.Invoke(null, null) as Builder<TInstance>;
         }
     }
 }
