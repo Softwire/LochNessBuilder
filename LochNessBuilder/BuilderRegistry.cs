@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LochNessBuilder
 {
     /// <summary>
-    /// Resolves a builder for a type. Builders decorated with the Builder attribute take precedence, otherwise a generic builder is used.
+    /// Resolves a builder for a type. Builders decorated with the Builder attribute take precedence, otherwise a "generic" builder is used.
     /// </summary>
     static class BuilderRegistry
     {
@@ -14,12 +14,39 @@ namespace LochNessBuilder
 
         static BuilderRegistry()
         {
-            var builders = typeof(BuilderRegistry).Assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(BuilderAttribute), false).Any());
+            var builderTypes = IdentifyTypesTaggedAsBuilders();
 
-            foreach (var builderType in builders)
+            foreach (var builderType in builderTypes)
             {
                 RegisterMostAppropriateGetter(builderType);
             }
+        }
+
+        private static IEnumerable<Type> IdentifyTypesTaggedAsBuilders()
+        {
+            var allAccessibleAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var possiblyRelevantAssemblies = allAccessibleAssemblies.Where(ass => !ass.FullName.StartsWith("System") && !ass.FullName.StartsWith("Microsoft")).ToList();
+
+            var builderTypes = new List<Type>();
+            foreach (var assembly in possiblyRelevantAssemblies)
+            {
+                try
+                {
+                    var builderDecoratedTypes =
+                        assembly
+                            .GetExportedTypes()
+                            .Where(t => t.GetCustomAttribute<BuilderAttribute>() != null)
+                            .ToList();
+                    builderTypes.AddRange(builderDecoratedTypes);
+                }
+                catch
+                {
+                    // Suppress any errors, since this functionality isn't critical, and almost all errors here will
+                    // be about assemblies that are in some way innaccessible, and hence weren't interesting assemblies.
+                }
+            }
+
+            return builderTypes;
         }
 
         private static void RegisterMostAppropriateGetter(Type builderType)
