@@ -16,10 +16,36 @@ namespace LochNessBuilder
         {
             var builders = typeof(BuilderRegistry).Assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(BuilderAttribute), false).Any());
 
-            foreach (var builder in builders)
+            foreach (var builderType in builders)
             {
-                var newProperty = builder.GetProperty("New", BindingFlags.Public | BindingFlags.Static);
-                RegisterPropertyGetterAsBuilderFactory(newProperty);
+                RegisterMostAppropriateGetter(builderType);
+            }
+        }
+
+        private static void RegisterMostAppropriateGetter(Type builderType)
+        {
+            var publicStaticGetProperties =
+                builderType.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.GetProperty);
+            var propsReturningABuilder = publicStaticGetProperties
+                .Where(prop =>
+                    prop.PropertyType.IsGenericType &&
+                    prop.PropertyType.GetGenericTypeDefinition() == typeof(Builder<>))
+                .ToList();
+
+            switch (propsReturningABuilder.Count)
+            {
+                case 0:
+                    throw new NotImplementedException(
+                        $"The type {builderType} is marked as a builder, but has no public static getter returning a Builder<>");
+                case 1:
+                    RegisterPropertyGetterAsBuilderFactory(propsReturningABuilder.Single());
+                    break;
+                default:
+                    // There are more than one candidate Prop. Pick one, use it, ignore the others.
+                    var propsCalledNew = propsReturningABuilder.Where(prop => prop.Name == "New").ToList();
+                    var propToUse = propsCalledNew.FirstOrDefault() ?? propsReturningABuilder.First();
+                    RegisterPropertyGetterAsBuilderFactory(propToUse);
+                    break;
             }
         }
 
