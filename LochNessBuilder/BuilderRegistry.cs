@@ -14,7 +14,7 @@ namespace LochNessBuilder
 
         static BuilderRegistry()
         {
-            var builders = typeof(BuilderRegistry).Assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(BuilderAttribute), false).Any());
+            var builders = typeof(BuilderRegistry).Assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(BuilderFactoryAttribute), false).Any());
 
             foreach (var builder in builders)
             {
