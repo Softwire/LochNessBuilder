@@ -26,18 +26,12 @@ namespace LochNessBuilder
 
         public static Builder<TInstance> Resolve<TInstance>() where TInstance : class, new()
         {
-            Type builderType;
-
-            // ReSharper disable once ConvertIfStatementToConditionalTernaryExpression
-            if (Builders.ContainsKey(typeof(TInstance)))
+            if (!Builders.ContainsKey(typeof(TInstance)))
             {
-                builderType = Builders[typeof(TInstance)];
-            }
-            else
-            {
-                builderType = typeof(Builder<>).MakeGenericType(typeof(TInstance));
+                return Builder<TInstance>.New;
             }
 
+            var builderType = Builders[typeof(TInstance)];
             var newMethod = builderType.GetProperty("New", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
             return newMethod.Invoke(null, null) as Builder<TInstance>;
         }
