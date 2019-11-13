@@ -35,7 +35,7 @@ namespace LochNessBuilder
                     var builderDecoratedTypes =
                         assembly
                             .GetExportedTypes()
-                            .Where(t => t.GetCustomAttribute<BuilderAttribute>() != null)
+                            .Where(t => t.GetCustomAttribute<BuilderFactoryAttribute>() != null)
                             .ToList();
                     builderTypes.AddRange(builderDecoratedTypes);
                 }

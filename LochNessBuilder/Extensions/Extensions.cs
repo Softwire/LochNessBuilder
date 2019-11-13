@@ -16,12 +16,22 @@ namespace LochNessBuilder.Extensions
             yield return tail;
         }
 
+        public static IEnumerable<T> Plus<T>(this T head, IEnumerable<T> tail)
+        {
+            yield return head;
+
+            foreach (var item in tail)
+            {
+                yield return item;
+            }
+        }
+
         public static IEnumerable<T> Times<T>(this int number, Func<T> generator)
         {
             return Enumerable.Range(1, number).Select(_ => generator());
         }
 
-        public static IEnumerable<T> Infinite<T>(this IEnumerable<T> items)
+        public static IEnumerable<T> LoopInfinitely<T>(this IEnumerable<T> items)
         {
             while (true)
             {
