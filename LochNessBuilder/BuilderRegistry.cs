@@ -18,10 +18,16 @@ namespace LochNessBuilder
 
             foreach (var builder in builders)
             {
-                var newMethod = builder.GetProperty("New", BindingFlags.Public | BindingFlags.Static).GetGetMethod();
-                var instanceType = newMethod.ReturnType.GetGenericArguments()[0];
-                BuilderFactoryMethods.Add(instanceType, newMethod);
+                var newProperty = builder.GetProperty("New", BindingFlags.Public | BindingFlags.Static);
+                RegisterPropertyGetterAsBuilderFactory(newProperty);
             }
+        }
+
+        private static void RegisterPropertyGetterAsBuilderFactory(PropertyInfo propReturningABuilder)
+        {
+            var builderGetMethod = propReturningABuilder.GetGetMethod();
+            var typeBuilt = builderGetMethod.ReturnType.GetGenericArguments()[0];
+            BuilderFactoryMethods.Add(typeBuilt, builderGetMethod);
         }
 
         public static Builder<TInstance> Resolve<TInstance>() where TInstance : class, new()
