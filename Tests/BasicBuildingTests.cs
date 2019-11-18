@@ -110,12 +110,25 @@ namespace Tests
         public void AddingConfigurationReturnsANewBuilder()
         {
             var builder1 = SimpleMonsterBuilder.New;
-            var builder2 = builder1.With(t => t.Id, -1);
+            var builder2 = builder1.With(m => m.Age, -1);
+
+            builder1.Build().Age.Should().Be(3);
+            builder1.Build().Age.Should().Be(3);
+            builder2.Build().Age.Should().Be(-1);
+            builder2.Build().Age.Should().Be(-1);
+        }
+
+        [Test]
+        public void DerivedBuildersStillShareInternalStateAlreadyDefinedOnTheOriginalBuilder()
+        {
+            var builder1 = SimpleMonsterBuilder.New;
+            var builder2 = builder1.With(m => m.Age, -1);
 
             builder1.Build().Id.Should().Be(1);
             builder1.Build().Id.Should().Be(2);
-            builder2.Build().Id.Should().Be(-1);
-            builder2.Build().Id.Should().Be(-1);
+            builder2.Build().Id.Should().Be(3);
+            builder2.Build().Id.Should().Be(4);
+            builder1.Build().Id.Should().Be(5);
         }
 
         [Test]
