@@ -28,7 +28,10 @@ namespace LochNessBuilder.Extensions
 
         public static IEnumerable<T> Times<T>(this int number, Func<T> generator)
         {
-            return Enumerable.Range(1, number).Select(_ => generator());
+            for (int i = 0; i < number; i++)
+            {
+                yield return generator();
+            }
         }
 
         public static IEnumerable<T> LoopInfinitely<T>(this IEnumerable<T> items)
@@ -42,7 +45,16 @@ namespace LochNessBuilder.Extensions
                 }
 
                 // ReSharper disable once PossibleMultipleEnumeration
-                items.GetEnumerator().Reset();
+                try
+                {
+                    items.GetEnumerator().Reset();
+                }
+                catch (Exception)
+                {
+                    // Some IEnumerables will need this. Others won't.
+                    // Some that don't need it will actively complain about this.
+                    // So ignore any errors thrown here.
+                }
             }
             // ReSharper disable once FunctionNeverReturns
         }
