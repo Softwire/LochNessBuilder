@@ -64,7 +64,7 @@ To build multiple `Monster`s, at different points in time, but retaining any sta
 
 ```csharp
 Builder<Monster> monsterBuilder = MonsterBuilder.New;
-Monster earlyMonster = monsterBuilder.Build();         // earlyMonster has Id=2
+Monster earlyMonster = monsterBuilder.Build();         // earlyMonster has Id=1
 // Do some testing stuff.
 // ...
 // then later
@@ -76,7 +76,7 @@ To build a Monster, but override a particular property that has previously been 
 
 ```csharp
 Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
-// youngMonsters will have Id 1-4, and be "Green" but will now have Age = 1, despite the configuration defined in the initiail MonsterBuilder.
+// youngMonsters will have Id 1-4, and be "Green" but will now have Age = 1, despite the configuration defined in the initial MonsterBuilder.
 // Note that the original assignment from the original Builder has still *run*; we've simply overwritten the value later.
 ```
 
@@ -89,7 +89,7 @@ There are further docs down below, but some particular notes on common situation
   * All it does is call `.WithOneOf(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
 * If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
 * You can use the `.WithBuilt/Builder()` methods to setup complex sub-properties, for which you've already defined `Builder`s.
-  * The "default" builders for `T`s, are ones which are `public static getters` on classes tagged with `[BuilderFactory]`.
+  * The "default" builders for `T`s, are ones which are `public static getters` on `public` classes tagged with `[BuilderFactory]`.
   * So if you want to define multiple `Builder<T>` properties, then you won't be able to use `.WithBuilt()` and should use `.WithBuilder()` instead.
   * Equally if you're not using "default" builders, then there's no need to include the `[BuilderFactory]` attribute.
   * If no defined `Builder` is found, then the "default" `Builder` is just one that calls `new()` on its target.
@@ -288,6 +288,8 @@ Lots of method/type names have changed between v2.0 and v3.0, but there's very l
 * `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m => m.SingleString, "a", "b", "c" )`.
 * `WithCollection(...)` is now `WithEnumerable(...)`.
 * The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
+
+The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
 
 ## TODOs
 
