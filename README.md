@@ -119,7 +119,9 @@ There are further docs down below, but some particular notes on common situation
   * So if you want to define multiple `Builder<T>` properties, then you won't be able to use `.WithBuilt()` and should use `.WithBuilder()` instead.
   * Equally if you're not using "default" builders, then there's no need to include the `[BuilderFactory]` attribute.
   * If no defined `Builder` is found, then the "default" `Builder` is just one that calls `new()` on its target.
-* `Builder` objects are immutable; each method call returns a *new* `Builder` object, leaving the original one unchanged.
+* `Builder` objects are immutable; each method call derives a *new* `Builder` object, leaving the original one unchanged.
+  * Note that the resultant new `Builder` is *not* completely separate, in that it stills retains any shared internal state that was defined on the original.
+  * e.g. If you have a parent `Builder` that uses `.WithSequentialIds()`, and derive a further `Builder` from it, then calls to either `Builder` will increment the 'shared' next Id value.
 
 ### Setup Methods
 
