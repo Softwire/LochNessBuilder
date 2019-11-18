@@ -10,6 +10,7 @@ namespace Tests
     {
         public int Id { get; set; }
         public int IntProp { get; set; }
+        public short ShortProp { get; set; }
         public string StringProp { get; set; }
         public object ObjectProp { get; set; }
 
