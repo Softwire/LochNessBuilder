@@ -289,28 +289,31 @@ namespace LochNessBuilder
             return WithDeferredResolveBuilder(selector, () => builder);
         }
 
-        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, TProp>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        private Func<TProp> ProduceObjectFactoryThatLazilyResolvesBuilderFactory<TProp>(Func<Builder<TProp>> builderFactory) where TProp : class, new()
         {
-            Func<TProp> actionToResolveAndUseBuilderLater = () =>
+            Builder<TProp> capturedBuilder = null;
+            Func<TProp> actionToResolveBuilderOnceAndThenUseItRepeatedly = () =>
             {
-                var builder = builderFactory();
-                var element = builder.Build();
+                if (capturedBuilder == null)
+                {
+                    capturedBuilder = builderFactory();
+                }
+
+                var element = capturedBuilder.Build();
                 return element;
             };
-            return WithFactory(selector, actionToResolveAndUseBuilderLater);
+
+            return actionToResolveBuilderOnceAndThenUseItRepeatedly;
+        }
+
+        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, TProp>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        {
+            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory));
         }
 
         private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
         {
-            var propType = GetDeclaredTypeOfIEnumerableProp(selector);
-
-            Func<IEnumerable<TProp>> actionToResolveAndUseBuilderLater = () =>
-            {
-                var builder = builderFactory();
-                var builtElements = builder.Build(_numberOfElementsToAddToNewIEnumerable);
-                return GetIEnumerableAsAppropriateType(builtElements, propType);
-            };
-            return WithFactory(selector, actionToResolveAndUseBuilderLater);
+            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory));
         }
         #endregion
 
