@@ -10,7 +10,7 @@ namespace LochNessBuilder
     /// </summary>
     static class BuilderRegistry
     {
-        private static readonly Dictionary<Type, MethodInfo> BuilderFactoryMethods = new Dictionary<Type, MethodInfo>();
+        private static readonly Dictionary<Type, List<MethodInfo>> BuilderFactoryMethods = new Dictionary<Type, List<MethodInfo>>();
 
         static BuilderRegistry()
         {
@@ -59,20 +59,15 @@ namespace LochNessBuilder
                     prop.PropertyType.GetGenericTypeDefinition() == typeof(Builder<>))
                 .ToList();
 
-            switch (propsReturningABuilder.Count)
+            if (!propsReturningABuilder.Any())
             {
-                case 0:
-                    throw new NotImplementedException(
-                        $"The type {builderType} is marked as a builder, but has no public static getter returning a Builder<>");
-                case 1:
-                    RegisterPropertyGetterAsBuilderFactory(propsReturningABuilder.Single());
-                    break;
-                default:
-                    // There are more than one candidate Prop. Pick one, use it, ignore the others.
-                    var propsCalledNew = propsReturningABuilder.Where(prop => prop.Name == "New").ToList();
-                    var propToUse = propsCalledNew.FirstOrDefault() ?? propsReturningABuilder.First();
-                    RegisterPropertyGetterAsBuilderFactory(propToUse);
-                    break;
+                throw new NotImplementedException(
+                    $"The type '{builderType.FullName}' is marked as a builder, but has no public static getter returning a Builder<>");
+            }
+
+            foreach (var builderProp in propsReturningABuilder)
+            {
+                RegisterPropertyGetterAsBuilderFactory(builderProp);
             }
         }
 
@@ -80,7 +75,13 @@ namespace LochNessBuilder
         {
             var builderGetMethod = propReturningABuilder.GetGetMethod();
             var typeBuilt = builderGetMethod.ReturnType.GetGenericArguments()[0];
-            BuilderFactoryMethods.Add(typeBuilt, builderGetMethod);
+
+            if (!BuilderFactoryMethods.ContainsKey(typeBuilt))
+            {
+                BuilderFactoryMethods.Add(typeBuilt, new List<MethodInfo>());
+            }
+
+            BuilderFactoryMethods[typeBuilt].Add(builderGetMethod);
         }
 
         public static Builder<TInstance> Resolve<TInstance>() where TInstance : class, new()
@@ -91,7 +92,12 @@ namespace LochNessBuilder
                 return Builder<TInstance>.New;
             }
 
-            var builderFactoryMethod = BuilderFactoryMethods[typeof(TInstance)];
+            var availableFactories = BuilderFactoryMethods[typeof(TInstance)];
+            if (availableFactories.Count > 1)
+            {
+                throw new NotSupportedException($"There are multiple BuilderFactories defined for type '{typeof(TInstance).FullName}'. Please use `.WithBuilder()` to specify which one should be used, rather than `WithBuilt()` since it is unable to infer the correct one.");
+            }
+            var builderFactoryMethod = availableFactories.Single();
             return builderFactoryMethod.Invoke(null, null) as Builder<TInstance>;
         }
     }
