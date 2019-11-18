@@ -127,13 +127,10 @@ namespace LochNessBuilder
 
         private Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value, Type explicitValueType)
         {
-            var instance = GetInstance();
-            var prop = GetProp(selector, instance);
             var val = Expression.Constant(value, explicitValueType);
-            var assign = Expression.Assign(prop, val);
+            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, val);
 
-            var result = Expression.Lambda<Action<TInstance>>(assign, instance).Compile();
-            return new Builder<TInstance>(Blueprint.Plus(result), PostBuildBlueprint);
+            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
         }
         #endregion
 
@@ -230,24 +227,10 @@ namespace LochNessBuilder
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
         public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory)
         {
-            var instance = GetInstance();
-            var prop = GetProp(selector, instance);
             Expression<Func<TProp>> valueInvoker = () => valueFactory();
-            Expression setExpression;
+            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body);
 
-            var unaryExpression = selector.Body as UnaryExpression;
-            if (unaryExpression != null && unaryExpression.NodeType == ExpressionType.Convert)
-            {
-                setExpression = Expression.Convert(valueInvoker.Body, typeof(TProp));
-            }
-            else
-            {
-                setExpression = Expression.Assign(prop, Expression.Invoke(valueInvoker));
-            }
-
-            var setLambda = Expression.Lambda<Action<TInstance>>(setExpression, instance).Compile();
-
-            return new Builder<TInstance>(Blueprint.Plus(setLambda), PostBuildBlueprint);
+            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
         }
 
         /// <summary>
@@ -415,6 +398,26 @@ namespace LochNessBuilder
             var instance = GetInstance();
             var prop = GetProp(selector, instance);
             return prop.Type;
+        }
+
+        private static Action<TInstance> CreateAssignmentLamdaFromPropExpressionAndValueExpression<TProp>(Expression<Func<TInstance, TProp>> propSelector, Expression valueExpression)
+        {
+            var instance = GetInstance();
+            var prop = GetProp(propSelector, instance);
+
+            if (propSelector.IsUnaryConversion())
+            {
+                // In this case TProp doesn't actually represent the type of the Property, so we need to cast the 
+                // value to the correct type, and assign the result of that cast.
+                // Note that this is the opposite of the cast that the compiler has inferred, and thus the reverse cast isn't guaranteed to work!
+                // But it should work in every reasonable use-case and will error in an understandable way.
+                // See the Notes on IsUnaryConversion for further details.
+                valueExpression = Expression.Convert(valueExpression, prop.Type);
+            }
+
+            var assign = Expression.Assign(prop, valueExpression);
+
+            return Expression.Lambda<Action<TInstance>>(assign, instance).Compile();
         }
         #endregion
     }
