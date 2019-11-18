@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -110,6 +111,27 @@ namespace Tests
             counter.Should().Be(7);
             builder.Build();
             counter.Should().Be(8);
+        }
+
+        [Test]
+        public void With_HandlesBidirectionalCasts()
+        {
+            var output = Builder<TestObject>.New.WithOneOf(o => o.ShortProp, 3, 4).Build();
+            output.ShortProp.Should().Be(3);
+        }
+
+        [Test]
+        public void With_HandlesMixedTypeParams()
+        {
+            var output = Builder<TestObject>.New.WithOneOf(o => o.ShortProp, 3, 4l, (short)2).Build();
+            output.ShortProp.Should().Be(3);
+        }
+
+        [Test]
+        public void With_ThrowsClearErrorOnMonodirectionalCasts()
+        {
+            Action builderSetupAction = () => Builder<TestObject>.New.WithOneOf(o => o.SubObjectProp, new object(), new object());
+            builderSetupAction.Should().Throw<ArgumentException>().WithMessage("Expression of type 'System.Object' cannot be used for assignment to type 'Tests.TestSubObject'");
         }
     }
 }
