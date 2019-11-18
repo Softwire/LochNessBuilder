@@ -28,7 +28,7 @@ namespace LochNessBuilder
 
         private IEnumerable<Action<TInstance>> Blueprint { get; }
         private IEnumerable<Action<TInstance>> PostBuildBlueprint { get; }
-        private int _numberOfElementsToAddToNewIEnumerable = 3;
+        private const int NumberOfElementsToAddToNewIEnumerable = 3;
 
         /// <summary>
         /// Construct a TInstance and apply all configured steps.
@@ -241,13 +241,17 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
-        public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Func<TProp> valueFactory)
+        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
+        public Builder<TInstance> WithFactory<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Func<TProp> valueFactory,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
 
             return WithFactory(selector, () =>
             {
-                var elements = _numberOfElementsToAddToNewIEnumerable.Times(valueFactory);
+                var elements = numberOfValues.Times(valueFactory);
                 var typedElementsObject = GetIEnumerableAsAppropriateType(elements, propType);
                 return typedElementsObject;
             });
@@ -270,9 +274,13 @@ namespace LochNessBuilder
         /// </summary>
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithBuilt<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector) where TProp : class, new()
+        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
+        public Builder<TInstance> WithBuilt<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
+            where TProp : class, new()
         {
-            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>);
+            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>, numberOfValues);
         }
 
         /// <summary>
@@ -292,9 +300,14 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="builder">The builder object to use to create the values.</param>
-        public Builder<TInstance> WithBuilder<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Builder<TProp> builder) where TProp : class, new()
+        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
+        public Builder<TInstance> WithBuilder<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Builder<TProp> builder,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
+            where TProp : class, new()
         {
-            return WithDeferredResolveBuilder(selector, () => builder);
+            return WithDeferredResolveBuilder(selector, () => builder, numberOfValues);
         }
 
         private Func<TProp> ProduceObjectFactoryThatLazilyResolvesBuilderFactory<TProp>(Func<Builder<TProp>> builderFactory) where TProp : class, new()
@@ -314,14 +327,21 @@ namespace LochNessBuilder
             return actionToResolveBuilderOnceAndThenUseItRepeatedly;
         }
 
-        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, TProp>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(
+            Expression<Func<TInstance, TProp>> selector,
+            Func<Builder<TProp>> builderFactory)
+            where TProp : class, new()
         {
             return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory));
         }
 
-        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Func<Builder<TProp>> builderFactory,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
+            where TProp : class, new()
         {
-            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory));
+            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory), numberOfValues);
         }
         #endregion
 
