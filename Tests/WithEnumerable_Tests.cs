@@ -21,26 +21,34 @@ namespace Tests
         }
 
         [Test]
-        public void WithEnumerable_ReusesTheOutputObject()
+        public void WithEnumerable_DoesNotReuseTheOutputObject()
         {
             var outputs = Builder<TestObject>.New.WithEnumerable(o => o.ArrayProp, 1, 2).Build(2);
-            outputs[1].ArrayProp.Should().BeSameAs(outputs[0].ArrayProp);
+            outputs[1].ArrayProp.Should().NotBeSameAs(outputs[0].ArrayProp);
         }
-
-        //QQ
-        //[Test]
-        //public void WithEnumerable_DoesNotReuseTheOutputObject()
-        //{
-        //    var outputs = Builder<TestObject>.New.WithEnumerable(o => o.ArrayProp, 1, 2).Build(2);
-        //    outputs[1].ArrayProp.Should().NotBeSameAs(outputs[0].ArrayProp);
-        //}
 
         [Test]
         public void WithEnumerable_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn()
         {
-            var originalArrayObject = new [] { 1, 2 };
+            var originalArrayObject = new[] { 1, 2 };
             var output = Builder<TestObject>.New.WithEnumerable(o => o.ArrayProp, originalArrayObject).Build();
             output.ArrayProp.Should().NotBeSameAs(originalArrayObject);
+        }
+
+        [Test]
+        public void WithEnumerable_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIEnumerableProps()
+        {
+            var originalArrayObject = new[] { 1, 2 };
+            var output = Builder<TestObject>.New.WithEnumerable(o => o.IEnumerableProp, originalArrayObject).Build();
+            output.IEnumerableProp.Should().NotBeSameAs(originalArrayObject);
+        }
+
+        [Test]
+        public void WithEnumerable_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIQueryableProps()
+        {
+            var originalArrayObject = new[] { 1, 2 };
+            var output = Builder<TestObject>.New.WithEnumerable(o => o.IQueryableProp, originalArrayObject).Build();
+            output.IEnumerableProp.Should().NotBeSameAs(originalArrayObject);
         }
 
         #region PopulatesMostFormsOfConcreteIEnumerable
