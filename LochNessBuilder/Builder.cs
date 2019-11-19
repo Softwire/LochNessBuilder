@@ -347,12 +347,16 @@ namespace LochNessBuilder
 
         #region WithSequentialIds
         /// <summary>
-        /// Sets an integer property on the TInstance, with sequential values starting from 1.
+        /// Sets a short, int or long property on the TInstance, with sequential values starting from 1.
         /// </summary>
+        /// <remarks>
+        /// Defining it as populating a long will transparently support all three types.
+        /// Technically it could overflow a short, but that will be obvious, and is very unlikely to happen.
+        /// </remarks>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, int>> selector)
+        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, long>> selector)
         {
-            return WithOneOf(selector, Enumerable.Range(1, int.MaxValue));
+            return WithOneOf(selector, Enumerable.Range(1, int.MaxValue).Select(intVal => (long)intVal));
         }
         #endregion
 
