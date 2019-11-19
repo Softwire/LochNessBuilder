@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using LochNessBuilder;
 // ReSharper disable InconsistentNaming
@@ -28,6 +30,15 @@ namespace Tests
         public ISet<int> ISetProp { get; set; }
         public ReadOnlyCollection<int> ReadOnlyCollectionProp { get; set; }
         public IReadOnlyCollection<int> IReadOnlyCollectionProp { get; set; }
+
+        public List<short> ShortListProp { get; set; }
+        public List<long> LongListProp { get; set; }
+        public List<object> ObjectListProp { get; set; }
+        public List<TestSubObject> SubObjectListProp { get; set; }
+
+        //Intended not to be supported.
+        public ConcurrentBag<int> ConcurrentBagProp { get; set; }
+        public IOrderedEnumerable<int> IOrderedEnumerableProp { get; set; }
 
         public TestSubObject SubObjectProp { get; set; }
         public int SubObjectRef { get; set; }
