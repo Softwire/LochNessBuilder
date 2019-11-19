@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -101,10 +102,10 @@ namespace LochNessBuilder
          * Map of Dependencies.
          *
          * With() : Explicitly implemented
-         *  called by WithEnumerable()
          *
          * WithFactory() : Explicitly implemented
          *  called by WithBuilt/Builder()
+         *  called by WithEnumerable()
          *  called by WithOneOf()
          *    called by WithSequentialIds()
          *
@@ -171,8 +172,12 @@ namespace LochNessBuilder
         public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
-            var valuesInTypedIEnumerable = GetIEnumerableAsAppropriateType(values, propType);
-            return With(selector, valuesInTypedIEnumerable, propType);
+            
+            // We want to do this once, up-front, to verify that we can create an appropriate type.
+            // So that if we *cant* then we get the error thrown immediately, rather than later.
+            var proofOfConcept = GetIEnumerableAsAppropriateType(values, propType);
+
+            return WithFactory(selector, () => GetIEnumerableAsAppropriateType(values, propType), propType);
         }
 
         /// <summary>
@@ -190,8 +195,8 @@ namespace LochNessBuilder
         {
             var concreteInitialisers = new Dictionary<Type, Func<IEnumerable<TProp>, IEnumerable<TProp>>>
             {
-                { typeof(IEnumerable<TProp>), (vals) => vals },
-                { typeof(IQueryable<TProp>), (vals) => vals.AsQueryable() },
+                { typeof(IEnumerable<TProp>), (vals) => vals.ToList() },
+                { typeof(IQueryable<TProp>), (vals) => vals.ToList().AsQueryable() },
                 { typeof(List<TProp>), (vals) => vals.ToList() },
                 { typeof(TProp[]), (vals) => vals.ToArray() },
                 { typeof(HashSet<TProp>), (vals) => new HashSet<TProp>(vals) },
@@ -225,8 +230,13 @@ namespace LochNessBuilder
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
         public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory)
         {
+            return WithFactory(selector, valueFactory, null);
+        }
+
+        private Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory, Type explicitValueType)
+        {
             Expression<Func<TProp>> valueInvoker = () => valueFactory();
-            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body);
+            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
 
             return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
         }
@@ -246,8 +256,7 @@ namespace LochNessBuilder
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
 
-            return WithFactory(selector, () =>
-            {
+            return WithFactory(selector, () => {
                 var elements = numberOfValues.Times(valueFactory);
                 var typedElementsObject = GetIEnumerableAsAppropriateType(elements, propType);
                 return typedElementsObject;
@@ -422,12 +431,19 @@ namespace LochNessBuilder
             return prop.Type;
         }
 
-        private static Action<TInstance> CreateAssignmentLamdaFromPropExpressionAndValueExpression<TProp>(Expression<Func<TInstance, TProp>> propSelector, Expression valueExpression)
+        private static Action<TInstance> CreateAssignmentLamdaFromPropExpressionAndValueExpression<TProp>(
+            Expression<Func<TInstance, TProp>> propSelector,
+            Expression valueExpression,
+            Type valueTypeOverride = null)
         {
             var instance = GetInstance();
             var prop = GetProp(propSelector, instance);
 
-            if (propSelector.IsUnaryConversion())
+            if (valueTypeOverride != null)
+            {
+                valueExpression = Expression.Convert(valueExpression, valueTypeOverride);
+            }
+            else if (propSelector.IsUnaryConversion())
             {
                 // In this case TProp doesn't actually represent the type of the Property, so we need to cast the 
                 // value to the correct type, and assign the result of that cast.
