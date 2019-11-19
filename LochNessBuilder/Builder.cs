@@ -186,6 +186,17 @@ namespace LochNessBuilder
             return WithEnumerable(selector, (IEnumerable<TProp>) values);
         }
 
+        /// <summary>
+        /// Given an IEnumerable of values, and a TargetType that implements IEnumerable[T],
+        /// creates a concrete implementation of IEnumerable which satisfies TargetType.
+        /// </summary>
+        /// <remarks>
+        /// We achieve this by having a bunch of Types that we *know* how to make, and then
+        /// checking whether any of these would satisfy the TargetType.
+        /// e.g. if TargetType is ISet[T] then a List[T] is no good, by HashSet[T] will be
+        /// suitable, so construct that.
+        /// </remarks>
+        /// <typeparam name="TProp">The type of the objects inside the IEnumerables being handled.</typeparam>
         private IEnumerable<TProp> GetIEnumerableAsAppropriateType<TProp>(IEnumerable<TProp> values, Type targetType)
         {
             var concreteInitialisers = new Dictionary<Type, Func<IEnumerable<TProp>, IEnumerable<TProp>>>
