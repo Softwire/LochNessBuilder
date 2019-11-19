@@ -2,10 +2,28 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net451;net461</TargetFrameworks>
-        <Version>2.0.0</Version>
+        <PackageVersion>3.0.0</PackageVersion>
+        <Version>3.0.0</Version>
+        <Title>LochNessBuilder</Title>
         <AssemblyTitle>LochNessBuilder</AssemblyTitle>
-        <Copyright>Copyright ©  2015</Copyright>
         <Product>LochNessBuilder</Product>
+        <PackageTags>builder tests testObjects Loch Ness Builder LochNess LochNessBuilder NessBuilder MonsterBuilder</PackageTags>
+        <Authors>JonArtus Brondahl dhedey benbelow Edisach olevett</Authors>
+        <Company>Softwire</Company>
+        <Copyright>Copyright © 2015</Copyright>
+        <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/Softwire/LochNessBuilder</RepositoryUrl>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageOutputPath>../nuget</PackageOutputPath>
+        <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+        <Description>A C# Builder library to automate and commonise creation of objects for tests.
+v3.0.0 renames large portions of the API for greater clarity and discoverability</Description>
+        <PackageReleaseNotes>Version 3.0.0
+* Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate.
+  * The `[Builder]` attribute renamed to `[BuilderFactory]`.
+  * `With(m =&gt; m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m =&gt; m.SubObject)`.
+  * `With(m =&gt; m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m =&gt; m.SingleString, "a", "b", "c" )`.
+  * `WithCollection(...)` is now `WithEnumerable(...)`.
+  * The implicit cast from `Builder&lt;T&gt;` to `T` has been removed. Replace it with calling `.Build()` on the builder.</PackageReleaseNotes>
     </PropertyGroup>
-
 </Project>
