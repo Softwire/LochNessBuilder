@@ -1,6 +1,6 @@
 # LochNessBuilder
 
-A C# Builder library to automate creation of objects for tests.
+A C# Builder library to automate and commonise creation of objects for tests.
 You can define a basic builder that wires up default values, which all tests can then use as-is, or add further customisations for specific tests.
 
 Note that v3.0 has made a lot of superficial changes to the API. See below for details
@@ -308,3 +308,35 @@ Note that such usages are stretching this library beyond the bounds of what it i
 
 * Unit Tests
 * Add support for Builders for objects with no default constructor.
+
+## Creating a new Nuget Package (Dev Notes)
+
+With .Net Standard, you no longer have to use a nuspec file since all the package information is added to the csproj file. You will, however, need VS >= 2017
+
+Process for releasing a new NugetPackage:
+
+* Update the `LochNessBuilder.csproj` with any new information. This can also be done in the package tab of the project properties:
+  * Identify the appropriate new semantic version number. See here if you're unsure: <https://semver.org/>
+  * Update the version numbers. Note that `PackageVersion` needs to be manually updated in the `.csproj` file not the VS UI, as the VS UI seems to be buggy.
+  * Write some appropriate PackageReleaseNotes in the package data.
+* Update the READMEs
+  * Update the `.\README.md` file in general, and if appropriate add a "Migration" section to it.
+  * Update the `.\nugetREADME.md` file, with an appropriate selection from them main `README.md` file.
+* Create the new package.
+  * Clean and Rebuild the solution, which will automatically package everything up for you.
+    * The newly created package will be dropped in the `<root>\nuget` folder.
+  * Delete the previous version which will be sitting beside the newly produced version.
+    * Note that a clean copy of the previous version will already have been kept, in `<root>\nuget\ArchivedPackages`, when it was released. Double check that it's there and if not, look through git to recreate it.
+* Deploy to Nuget!
+  * Log into nuget with an account that is part of the LochNess organisation (Fet an existing member of the org to add you if not already included)
+  * Go to the `Upload Package` Page ([link](https://www.nuget.org/packages/manage/upload))
+  * Browse to the newly packaged file, and select it.
+    * Don't worry about the \<license\> warning. VS doesn't seem to properly support the new version of the tag yet, so we're stuck using the old version.
+    * Feel free to fix this if you know how!
+  * Nuget should auto-parse all the meta data and display it. Briefly review it.
+  * Scroll to the bottom of the page, where Nuget asks for any documentation. Upload the `.\nugetREADME.md` file.
+* Test that the new package is available on Nuget, and that updating your project still works after updating it to use the new version.
+* Archive the package
+  * Having released a new version to Nuget, copy the binary pacakge that you released into `<root>\nuget\ArchivedPackages`, for posterity.
+  * Do this now, to ensure that we have a clean version of the package, not one overwritten with later dev work!
+* Publicise the release in whatever manner you deem appropriate. At very least, the people in the Authors tag probably want to know!
