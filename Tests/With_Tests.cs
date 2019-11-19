@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using FluentAssertions;
 using LochNessBuilder;
 using NUnit.Framework;
