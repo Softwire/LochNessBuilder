@@ -106,7 +106,7 @@ namespace LochNessBuilder
          * WithFactory() : Explicitly implemented
          *  called by WithBuilt/Builder()
          *  called by WithEnumerable()
-         *  called by WithOneOf()
+         *  called by WithSequentialFrom()
          *    called by WithSequentialIds()
          *
          * WithAddToCollection() : Explicitly implemented
@@ -136,28 +136,28 @@ namespace LochNessBuilder
         }
         #endregion
 
-        #region WithOneOf
+        #region WithSequentialFrom
         /// <summary>
-        /// Sets a property on the TInstance, based of a set of available values, looping if necessary.
+        /// Sets a property on the TInstance, taking the next value from a set of available values, looping if necessary.
         /// </summary>
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="values">An IEnumerable which will be iterated over to obtain single values to assign.</param>
-        public Builder<TInstance> WithOneOf<TProp>(Expression<Func<TInstance, TProp>> selector, IEnumerable<TProp> values)
+        public Builder<TInstance> WithSequentialFrom<TProp>(Expression<Func<TInstance, TProp>> selector, IEnumerable<TProp> values)
         {
             var factory = values.LoopInfinitely().GetAccessor();
             return WithFactory(selector, factory);
         }
 
         /// <summary>
-        /// Sets a property on the TInstance, based of a set of available values, looping if necessary.
+        /// Sets a property on the TInstance, taking the next value from a set of available values, looping if necessary.
         /// </summary>
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
         /// <param name="values">One or more values which will be looped over to obtain single values to assign.</param>
-        public Builder<TInstance> WithOneOf<TProp>(Expression<Func<TInstance, TProp>> selector, params TProp[] values)
+        public Builder<TInstance> WithSequentialFrom<TProp>(Expression<Func<TInstance, TProp>> selector, params TProp[] values)
         {
-            return WithOneOf(selector, (IEnumerable<TProp>)values);
+            return WithSequentialFrom(selector, (IEnumerable<TProp>)values);
         }
         #endregion
 
@@ -362,7 +362,7 @@ namespace LochNessBuilder
         /// <param name="selector">A delegate which specifies the property to set.</param>
         public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, long>> selector)
         {
-            return WithOneOf(selector, Enumerable.Range(1, int.MaxValue).Select(intVal => (long)intVal));
+            return WithSequentialFrom(selector, Enumerable.Range(1, int.MaxValue).Select(intVal => (long)intVal));
         }
         #endregion
 
