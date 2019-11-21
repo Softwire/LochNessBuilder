@@ -7,7 +7,7 @@ namespace Tests
 {
     [TestFixture]
     // ReSharper disable once InconsistentNaming
-    public class WithSequentialIds_Tests
+    internal class WithSequentialIds_Tests
     {
         [Test]
         public void WithSequentialIds_AssignsValue()

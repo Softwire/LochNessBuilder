@@ -10,7 +10,7 @@ namespace Tests
 {
     [TestFixture]
     // ReSharper disable once InconsistentNaming
-    public class WithCreateEnumerableFrom_Tests
+    internal class WithCreateEnumerableFrom_Tests
     {
         [Test]
         public void WithCreateEnumerableFrom_SetsAProperty()

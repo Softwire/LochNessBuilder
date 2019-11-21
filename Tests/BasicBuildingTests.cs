@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
-    public class SimpleMonster
+    internal class SimpleMonster
     {
         public int Id { get; set; }
         public string Colour { get; set; }
@@ -15,7 +15,7 @@ namespace Tests
     }
 
     [BuilderFactory]
-    public static class SimpleMonsterBuilder
+    internal static class SimpleMonsterBuilder
     {
         public static Builder<SimpleMonster> New
         {
@@ -31,7 +31,7 @@ namespace Tests
     }
 
     [TestFixture]
-    public class BasicBuildingTests
+    internal class BasicBuildingTests
     {
         [Test]
         public void BasicBuild()

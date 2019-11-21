@@ -9,7 +9,7 @@ namespace Tests
 {
     [TestFixture]
     // ReSharper disable once InconsistentNaming
-    public class WithFactory_Single_Tests
+    internal class WithFactory_Single_Tests
     {
         [Test]
         public void WithFactory_Single_SetsTheProperty()

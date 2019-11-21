@@ -3,10 +3,10 @@ using System.Linq.Expressions;
 
 namespace LochNessBuilder.Extensions
 {
-    public static class ExpressionExtensions
+    internal static class ExpressionExtensions
     {
         /// <remarks>See block comment below.</remarks>
-        public static MemberExpression GetMemberExpression<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
+        internal static MemberExpression GetMemberExpression<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
         {
             switch (selector?.Body)
             {
@@ -50,7 +50,7 @@ namespace LochNessBuilder.Extensions
          */
 
         /// <remarks>See block comment above.</remarks>
-        public static bool IsUnaryConversion<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
+        internal static bool IsUnaryConversion<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
         {
             switch (selector?.Body)
             {
@@ -65,7 +65,10 @@ namespace LochNessBuilder.Extensions
             }
         }
 
-        public static string GetMemberName<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
+        /// <summary>
+        /// Simple helper to fetch the name of the Member being invoked.
+        /// </summary>
+        internal static string GetMemberName<TInstance, TProp>(this Expression<Func<TInstance, TProp>> selector)
         {
             return GetMemberExpression(selector).Member.Name;
         }
