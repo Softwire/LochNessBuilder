@@ -202,7 +202,9 @@ namespace Tests
             testMonster.HomeLake.Monsters.Should().BeOfType<HashSet<ComplexMonster>>();
 
             testMonster.LakeId.Should().Be(1);
-            testMonster.HomeLake.Monsters.Should().HaveCount(2);
+            testMonster.HomeLake.Monsters.Should().HaveCount(2); //This includes the "extra" monster added in the LakeBuilder.
+            testMonster.HomeLake.Monsters.First().Id.Should().Be(0); //This is the "extra" monster added in the LakeBuilder, with only the blank constructor
+            testMonster.HomeLake.Monsters.First().HomeLake.Should().Be(testMonster.HomeLake); //This should be achieved by the postSetup wiring-up.
             testMonster.HomeLake.Monsters.Should().Contain(testMonster);
 
             testMonster.Egg.Should().NotBeNull();
@@ -240,7 +242,9 @@ namespace Tests
             testMonster.HomeLake.Monsters.Should().BeOfType<HashSet<ComplexMonster>>();
 
             //testMonster.LakeId.Should().Be(1);
-            testMonster.HomeLake.Monsters.Should().HaveCount(2);
+            testMonster.HomeLake.Monsters.Should().HaveCount(2); //This includes the "extra" monster added in the LakeBuilder.
+            testMonster.HomeLake.Monsters.First().Id.Should().Be(0); //This is the "extra" monster added in the LakeBuilder, with only the blank constructor
+            testMonster.HomeLake.Monsters.First().HomeLake.Should().Be(testMonster.HomeLake); //This should be achieved by the postSetup wiring-up.
             testMonster.HomeLake.Monsters.Should().Contain(testMonster);
 
             testMonster.Egg.Should().NotBeNull();
