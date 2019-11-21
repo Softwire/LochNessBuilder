@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Tests
 {
-    public class ComplexMonster
+    internal class ComplexMonster
     {
         public int Id { get; set; }
         public string Nationality { get; set; }
@@ -22,7 +22,7 @@ namespace Tests
         public Egg Egg { get; set; }
     }
 
-    public class Lake
+    internal class Lake
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -30,7 +30,7 @@ namespace Tests
         public ISet<ComplexMonster> Monsters { get; set; }
     }
 
-    public class Egg
+    internal class Egg
     {
         public Egg()
         {
@@ -42,7 +42,7 @@ namespace Tests
     }
 
     [BuilderFactory]
-    public static class ComplexMonsterBuilder
+    internal static class ComplexMonsterBuilder
     {
         public static Builder<ComplexMonster> New
         {
@@ -110,7 +110,7 @@ namespace Tests
         }
     }
 
-    public static class MinimalLakeBuilder
+    internal static class MinimalLakeBuilder
     {
         public static Builder<Lake> New
         {
@@ -125,7 +125,7 @@ namespace Tests
     }
 
     [BuilderFactory]
-    public static class LakeBuilder
+    internal static class LakeBuilder
     {
         public static Builder<Lake> New
         {
@@ -148,7 +148,7 @@ namespace Tests
     }
 
     [TestFixture]
-    public class SingleComplexSetupTests
+    internal class SingleComplexSetupTests
     {
         [Test]
         public void CanBuildOne()
