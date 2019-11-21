@@ -105,7 +105,7 @@ namespace LochNessBuilder
          *
          * WithFactory() : Explicitly implemented
          *  called by WithBuilt/Builder()
-         *  called by WithEnumerable()
+         *  called by WithCreateEnumerableFrom()
          *  called by WithSequentialFrom()
          *    called by WithSequentialIds()
          *
@@ -161,7 +161,7 @@ namespace LochNessBuilder
         }
         #endregion
 
-        #region WithEnumerable
+        #region WithCreateEnumerableFrom
         /// <summary>
         /// Sets a property of type IEnumerable on the constructed instance.
         /// Builds a relevant concrete object from the provided params, to satisfy the property.
@@ -169,7 +169,7 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
         /// <param name="values">One or more values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
-        public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
+        public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
             
