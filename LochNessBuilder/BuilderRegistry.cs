@@ -62,7 +62,7 @@ namespace LochNessBuilder
             if (!propsReturningABuilder.Any())
             {
                 throw new NotImplementedException(
-                    $"The type '{builderType.FullName}' is marked as a builder, but has no public static getter returning a Builder<>");
+                    $"The type '{builderType.ToString()}' is marked as a builder, but has no public static getter returning a Builder<>");
             }
 
             foreach (var builderProp in propsReturningABuilder)
@@ -95,7 +95,7 @@ namespace LochNessBuilder
             var availableFactories = BuilderFactoryMethods[typeof(TInstance)];
             if (availableFactories.Count > 1)
             {
-                throw new NotSupportedException($"There are multiple BuilderFactories defined for type '{typeof(TInstance).FullName}'. Please use `.WithBuilder()` to specify which one should be used, rather than `WithBuilt()` since it is unable to infer the correct one.");
+                throw new NotSupportedException($"There are multiple BuilderFactories defined for type '{typeof(TInstance).ToString()}'. Please use `.WithBuilder()` to specify which one should be used, rather than `WithBuilt()` since it is unable to infer the correct one.");
             }
             var builderFactoryMethod = availableFactories.Single();
             return builderFactoryMethod.Invoke(null, null) as Builder<TInstance>;
