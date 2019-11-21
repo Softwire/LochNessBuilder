@@ -114,7 +114,7 @@ namespace Tests
         {
             Action builderSetupAction = () => Builder<TestObject>.New.WithFactory(o => o.SubObjectListProp, () => new object());
             builderSetupAction.Should().Throw<NotSupportedException>()
-                .WithMessage("From the object values provided, the IEnumerable handler knows how to create object[], List<object>, HashSet<object>, Queue<object>, Collection<object>, ReadOnlyCollection<object>, or IQueryable<object>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call.*")
+                .WithMessage("*From the object values provided, the IEnumerable handler knows how to create object[], List<object>, HashSet<object>, Queue<object>, Collection<object>, ReadOnlyCollection<object>, or IQueryable<object>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call.*")
                 .WithMessage("*List`1[Tests.TestSubObject]*");
         }
     }
