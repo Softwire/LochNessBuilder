@@ -102,6 +102,7 @@ namespace LochNessBuilder
          * Map of Dependencies.
          *
          * With() : Explicitly implemented
+         *  called by WithSharedRef()
          *
          * WithFactory() : Explicitly implemented
          *  called by WithBuilt/Builder()
@@ -113,23 +114,60 @@ namespace LochNessBuilder
          */
 
         #region With
+        // Note that we restrict the usage of `.With()` to (effectively) valueTypes.
+        // This is to prevent it being *unintentionally* used to set the same object on multiple TInstances.
+
         /// <summary>
-        /// Sets a property on the TInstance.
+        /// Sets a ValueType property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
         /// </summary>
-        /// <typeparam name="TProp">The type of the property being set.</typeparam>
+        /// <typeparam name="TProp">The type of the property being set. Must be a ValueType</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        /// <param name="value">
-        /// The value to assign.<br/>
-        /// Note that this value will be shared between all instances constructed by this builder
-        /// </param>
-        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value)
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value) where TProp : struct
         {
-            return With(selector, value, typeof(TProp));
+            return With_Internal(selector, value);
         }
 
-        private Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value, Type explicitValueType)
+        /// <summary>
+        /// Sets a Nullable-ValueType property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the property being set. Must be a Nullable-ValueType Type</typeparam>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp?>> selector, TProp? value) where TProp : struct
         {
-            var val = Expression.Constant(value, explicitValueType);
+            return With_Internal(selector, value);
+        }
+
+        /// <summary>
+        /// Sets a string property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
+        /// </summary>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The string value to assign.</param>
+        public Builder<TInstance> With(Expression<Func<TInstance, string>> selector, string value)
+        {
+            return With_Internal(selector, value);
+        }
+
+        /// <summary>
+        /// Sets a single ReferenceType object to be (re-)used on ALL TInstances.
+        /// Use `.WithFactory()` to produced a distinct object on each TInstance.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the property being set. Must be a ReferenceType</typeparam>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> WithSharedRef<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value) where TProp : class
+        {
+            return With_Internal(selector, value);
+        }
+
+        /// <remarks>This only exists so that we can put type constraints and a different name for the ReferenceType case.</remarks>
+        private Builder<TInstance> With_Internal<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value)
+        {
+            var val = Expression.Constant(value, typeof(TProp));
             var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, val);
 
             return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
