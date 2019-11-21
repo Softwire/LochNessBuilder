@@ -7,7 +7,7 @@ using LochNessBuilder;
 
 namespace Tests
 {
-    public class TestObject
+    internal class TestObject
     {
         public int Id { get; set; }
         public int IntProp { get; set; }
@@ -44,7 +44,7 @@ namespace Tests
         public int SubObjectRef { get; set; }
     }
 
-    public class TestSubObject
+    internal class TestSubObject
     {
         public int Id { get; set; }
         public string StringProp { get; set; }
@@ -53,7 +53,7 @@ namespace Tests
     }
 
     [BuilderFactory]
-    public static class RegisteredSubObjectBuilder
+    internal static class RegisteredSubObjectBuilder
     {
         public static Builder<TestSubObject> Other => Builder<TestSubObject>.New.With(subObj => subObj.StringProp, "OtherBuilder");
         public static Builder<TestSubObject> New => Builder<TestSubObject>.New.With(subObj => subObj.StringProp, "NewBuilder");
