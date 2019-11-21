@@ -125,7 +125,7 @@ namespace Tests
         [Test]
         public void WithSequentialFrom_HandlesMixedTypeParams()
         {
-            var output = Builder<TestObject>.New.WithSequentialFrom(o => o.ShortProp, 3, 4l, (short)2).Build();
+            var output = Builder<TestObject>.New.WithSequentialFrom(o => o.ShortProp, 3, 4L, (short)2).Build();
             output.ShortProp.Should().Be(3);
         }
 
