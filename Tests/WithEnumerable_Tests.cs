@@ -247,7 +247,7 @@ namespace Tests
         [Test]
         public void WithCreateEnumerableFrom_HandlesMixedTypeParams()
         {
-            var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.LongListProp, 3, 4l, (short)2).Build();
+            var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.LongListProp, 3, 4L, (short)2).Build();
             output.LongListProp.Should().BeOfType<List<long>>();
         }
     }
