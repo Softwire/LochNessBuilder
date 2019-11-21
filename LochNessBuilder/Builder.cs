@@ -109,7 +109,7 @@ namespace LochNessBuilder
          *  called by WithOneOf()
          *    called by WithSequentialIds()
          *
-         * Add() : Explicitly implemented
+         * WithAddToCollection() : Explicitly implemented
          */
 
         #region With
@@ -366,19 +366,19 @@ namespace LochNessBuilder
         }
         #endregion
 
-        #region Add
+        #region WithAddToCollection
         /// <summary>
         /// Adds an item to an ICollection on the TInstance.
         /// </summary>
         /// <typeparam name="TProp">The type of the objects inside the ICollection.</typeparam>
         /// <param name="selector">A delegate which specifies the target ICollection.</param>
         /// <param name="values">One or more values which will be added to the ICollection</param>
-        public Builder<TInstance> Add<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, params TProp[] values)
+        public Builder<TInstance> WithAddToCollection<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, params TProp[] values)
         {
             var builder = this;
             foreach (var value in values)
             {
-                builder = builder.Add(selector, value);
+                builder = builder.WithAddToCollection(selector, value);
             }
             return builder;
         }
@@ -389,7 +389,7 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the objects inside the ICollection.</typeparam>
         /// <param name="selector">A delegate which specifies the target ICollection.</param>
         /// <param name="value">The value which will be added to the ICollection</param>
-        public Builder<TInstance> Add<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, TProp value)
+        public Builder<TInstance> WithAddToCollection<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, TProp value)
         {
             var instance = GetInstance();
             var collectionGetter = typeof(TInstance).GetProperty(selector.GetMemberName()).GetGetMethod();
