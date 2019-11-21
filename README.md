@@ -92,7 +92,7 @@ There are further docs down below, but some particular notes on common situation
   * All it does is call `.WithSequentialFrom(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
 * If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
 * You can use the `.WithBuilt/Builder()` methods to setup complex sub-properties, for which you've already defined `Builder`s.
-  * The "default" builders for `T`s, are ones which are `public static getters` on `public` classes tagged with `[BuilderFactory]`.
+  * The "default" builders for `T`s, are ones which are `public static getters` on classes tagged with `[BuilderFactory]`.
   * So if you want to define multiple `Builder<T>` properties, then you won't be able to use `.WithBuilt()` and should use `.WithBuilder()` instead.
   * Equally if you're not using "default" builders, then there's no need to include the `[BuilderFactory]` attribute.
   * If no defined `Builder` is found, then the "default" `Builder` is just one that calls `new()` on its target.
