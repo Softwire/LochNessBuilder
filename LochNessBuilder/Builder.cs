@@ -209,6 +209,18 @@ namespace LochNessBuilder
         /// <param name="values">One or more values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
         public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
         {
+            return WithCreateEnumerableFrom(selector, (IEnumerable<TProp>) values);
+        }
+
+        /// <summary>
+        /// Sets a property of type IEnumerable on the constructed instance.
+        /// Builds a relevant concrete object from the provided IEnumerable, to satisfy the property.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
+        /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
+        /// <param name="values">Values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
+        public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, IEnumerable<TProp> values)
+        {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
             var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
 
@@ -230,8 +242,8 @@ namespace LochNessBuilder
         {
             var concreteInitialisers = new Dictionary<Type, Func<IEnumerable<TProp>, IEnumerable<TProp>>>
             {
-                { typeof(IEnumerable<TProp>), (vals) => vals.ToList() },
-                { typeof(IQueryable<TProp>), (vals) => vals.ToList().AsQueryable() },
+                { typeof(IEnumerable<TProp>), (vals) => vals.ToList() }, //Call ToList() to force this to be a new object, not the same object, re-used.
+                { typeof(IQueryable<TProp>), (vals) => vals.ToList().AsQueryable() }, //As above.
                 { typeof(List<TProp>), (vals) => vals.ToList() },
                 { typeof(TProp[]), (vals) => vals.ToArray() },
                 { typeof(HashSet<TProp>), (vals) => new HashSet<TProp>(vals) },
