@@ -54,7 +54,7 @@ namespace Tests
                     
                     .With(m => m.Nationality, "Scottish")                                   // All monsters will be Scottish....
                     
-                    .WithOneOf(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
+                    .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
                     .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
                                                                                             // Above is identical to ".WithEnumerable(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
@@ -113,7 +113,7 @@ namespace Tests
             {
                 return Builder<Lake>.New
                     .WithSequentialIds(t => t.Id)
-                    .WithOneOf(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Lake {i}"))
+                    .WithSequentialFrom(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Lake {i}"))
                     .WithFactory(t => t.Monsters, () => new HashSet<ComplexMonster>());
             }
         }
