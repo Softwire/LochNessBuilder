@@ -18,6 +18,7 @@ namespace Tests
         public Lake HomeLake { get; set; }
         public int LakeId { get; set; }
         public Lake HolidayLake { get; set; }
+        public Lake CommunityLake { get; set; }
         public Egg Egg { get; set; }
     }
 
@@ -48,13 +49,17 @@ namespace Tests
             get
             {
                 var rand = new Random();
+                var theBiggestLake = new Lake();
+
                 return Builder<ComplexMonster>.New
                     .WithSequentialIds(m => m.Id)                                           // Ids will be 1, 2, 3, 4, 5....
                                                                                             // Above is identical to ".With(t => t.Id, Enumerable.Range(1, int.MaxValue))"
-                    
-                    .With(m => m.Nationality, "Scottish")                                   // All monsters will be Scottish....
-                    
-                    .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
+
+                    .With(m => m.Nationality, "Scottish")                                   // All monsters will be Scottish.
+
+                    .WithSharedRef(m => m.CommunityLake, theBiggestLake)                    // All monsters will have a reference to the same Lake in this.CommunityLake.
+
+                    .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")              // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
                     .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
                                                                                             // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"

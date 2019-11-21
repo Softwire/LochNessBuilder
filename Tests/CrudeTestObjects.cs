@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Linq;
 using LochNessBuilder;
 // ReSharper disable InconsistentNaming
@@ -12,6 +11,7 @@ namespace Tests
     {
         public int Id { get; set; }
         public int IntProp { get; set; }
+        public int? NullableIntProp { get; set; }
         public short ShortProp { get; set; }
         public long LongProp { get; set; }
         public string StringProp { get; set; }
