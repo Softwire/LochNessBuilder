@@ -101,16 +101,16 @@ namespace LochNessBuilder
         /*
          * Map of Dependencies.
          *
-         * With() : Explicitly implemented
+         * With() : Base method
          *  called by WithSharedRef()
          *
-         * WithFactory() : Explicitly implemented
+         * WithFactory() : Base method
          *  called by WithBuilt/Builder()
          *  called by WithCreateEnumerableFrom()
          *  called by WithSequentialFrom()
          *    called by WithSequentialIds()
          *
-         * WithAddToCollection() : Explicitly implemented
+         * WithAddToCollection() : Base method
          */
 
         #region With
@@ -276,6 +276,7 @@ namespace LochNessBuilder
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
         public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory)
         {
+            //We don't override the valueType - we have no more information about it that the type information already being passed.
             return WithFactory(selector, valueFactory, null);
         }
 

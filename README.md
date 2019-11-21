@@ -119,9 +119,9 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 * ##### WithBuilt()
   * Like `WithBuilder`, but the appropriate `Builder<T>` is found automatically from any classes tagged with `BuilderFactory`, so you don't need to provide any second argument at all ... it just works it all out.
 * ##### _`IEnumerable` variations of `WithFactory()`_
-  * The above 3 variations on `WithFactory()` have overloads which simplify the work if the property in question implements `IEnumerable<T>`. Rather than defining a Factory that builds the whole `IEnumerable<T>`, so provide one which simply builds `T`s and the `IEnumerable<>` portion will get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements.
+  * If the property you are trying to set implements `IEnumerable<T>` then there are some additional overloads of the above 3 variations on `WithFactory()`. They allow you to provide Factory/Buildrs that simply build `Ts`, rather than having to build the whole `IEnumerable<T>`. The details of the `IEnumerable<>` portion will then get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements by default, or you can specify how many `T`s should be built and put into the IEnumerable, if wanted.
 * ##### WithAddToCollection()
-  * Add the value to the existing ICollection property.
+  * Add the given value to the existing ICollection property.
   * This assumes that an earlier setup method (or possibly the object constructor) has initialised the ICollection beforehand.
 * ##### WithPreBuildSetup()
   * Do an arbitrary action to the object being created, but do it *before* all the other things.
@@ -296,7 +296,6 @@ The broad changes to the API were to avoid overload conflicts, to improve clarit
 
 ## TODOs
 
-* Unit Tests
 * Add support for Builders for objects with no default constructor.
 
 ## Creating a new Nuget Package (Dev Notes)
