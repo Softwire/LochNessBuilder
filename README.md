@@ -120,7 +120,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
   * Like `WithBuilder`, but the appropriate `Builder<T>` is found automatically from any classes tagged with `BuilderFactory`, so you don't need to provide any second argument at all ... it just works it all out.
 * ##### _`IEnumerable` variations of `WithFactory()`_
   * The above 3 variations on `WithFactory()` have overloads which simplify the work if the property in question implements `IEnumerable<T>`. Rather than defining a Factory that builds the whole `IEnumerable<T>`, so provide one which simply builds `T`s and the `IEnumerable<>` portion will get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements.
-* ##### Add()
+* ##### WithAddToCollection()
   * Add the value to the existing ICollection property.
   * This assumes that an earlier setup method (or possibly the object constructor) has initialised the ICollection beforehand.
 * ##### WithPreBuildSetup()
@@ -239,7 +239,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
             get
             {
                 return Minimal
-                    .Add(t => t.Monsters, new Monster())
+                    .WithAddToCollection(t => t.Monsters, new Monster())
                     .WithPostBuildSetup(TieAllMonstersToLake);
             }
         }
