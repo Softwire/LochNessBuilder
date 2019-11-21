@@ -56,8 +56,8 @@ namespace Tests
                     
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
-                    .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
-                                                                                            // Above is identical to ".WithEnumerable(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                    .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
+                                                                                            // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
                                                                                             // and *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())            // All monsters will get their own, distinct (initially empty) List<> object for food.
