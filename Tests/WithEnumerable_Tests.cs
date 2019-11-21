@@ -231,7 +231,7 @@ namespace Tests
         [Test]
         public void WithCreateEnumerableFrom_ForcesCastingToSmallerNumericTypes()
         {
-            var output = Builder<TestObject>.New.WithCreateEnumerableFrom<short>(o => o.ShortListProp, 1, 2).Build();
+            var output = Builder<TestObject>.New.WithCreateEnumerableFrom<short>(o => o.ShortListProp, 1, 2).Build(); //This won't compile without the '<short>' Method TypeParam, or explicit '(short)' casts.
             output.ShortListProp.Should().BeOfType<List<short>>();
         }
 
