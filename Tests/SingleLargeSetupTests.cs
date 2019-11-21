@@ -127,7 +127,7 @@ namespace Tests
             get
             {
                 return MinimalLakeBuilder.New
-                    .Add(t => t.Monsters, new ComplexMonster())
+                    .WithAddToCollection(t => t.Monsters, new ComplexMonster())
                     .WithPostBuildSetup(TieAllMonstersToLake);
             }
         }
