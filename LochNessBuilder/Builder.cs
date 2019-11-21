@@ -250,7 +250,7 @@ namespace LochNessBuilder
             }
 
             var T = typeof(TProp).Name;
-            throw new NotSupportedException($"From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType that was to be populated was: " + targetType.ToString());
+            throw new NotSupportedException($"Attempted to populate a Property of Type '{targetType.ToString()}'. From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call.");
         }
         #endregion
 
