@@ -85,7 +85,7 @@ Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
 There are further docs down below, but some particular notes on common situations and easy mistakes to make...
 
 * The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. If you're setting an object property then you don't probably don't want that; you probably want to use `.WithFactory()`.
-* The `.WithEnumerable()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
+* The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
   * It wil create distinct `IEnumerable` objects for each object built.
   * If you have (or want to create) the specific Enumerable, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
 * Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
@@ -110,7 +110,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
 * ##### WithSequentialIds()
   * Sets a numeric property with increasing numbers, from 1 to int.MaxValue.
-* ##### WithEnumerable()
+* ##### WithCreateEnumerableFrom()
   * Provide multiple values, and the builder will create the relevant container and put them all onto each new object
 * ##### WithFactory()
   * Provide a factory method, to set a property to a newly created value each time.
@@ -177,8 +177,8 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
-                    .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
-                    // Above is identical to ".WithEnumerable(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                    .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
+                    // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
                     // Above is *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())            // All monsters will get their own, distinct (initially empty) List<> object for food.
@@ -289,7 +289,7 @@ Lots of method/type names have changed between v2.0 and v3.0, but there's very l
 * The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
 * `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
 * `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithSequentialFrom(m => m.SingleString, "a", "b", "c" )`.
-* `WithCollection(...)` is now `WithEnumerable(...)`.
+* `WithCollection(...)` is now `WithCreateEnumerableFrom(...)`.
 * The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
 
 The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
