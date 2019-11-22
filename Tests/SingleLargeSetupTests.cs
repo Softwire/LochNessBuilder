@@ -62,11 +62,14 @@ namespace Tests
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")              // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
                     .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
-                                                                                            // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
-                                                                                            // and *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
+                                                                                                      // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                                                                                                      // and *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())            // All monsters will get their own, distinct (initially empty) List<> object for food.
                     
+                    .WithAddToCollection(m => m.FavouriteFood, "People")                    // All monsters like to eat people, in addition to anything that could have been configured prior to this point.
+                                                                                            // (Obviously the more natural way to achieve that would be to include it in the previous Factory, but we want to demonstrate this .WithAddToCollection method.)
+
                     .WithFactory(m => m.Age, () => rand.Next(6))                            // Age might be 2, 4, 1, 4, 6, 3 ...
                     
                     .WithBuilder(m => m.HolidayLake, MinimalLakeBuilder.New)                // All monsters will have this.HomeLake populated with the result of "LakeBuilder.Minimal.Build()".
@@ -188,7 +191,7 @@ namespace Tests
             testMonster.Sounds.Should().BeEquivalentTo(expectedSounds);
 
             testMonster.FavouriteFood.Should().NotBeNull();
-            testMonster.FavouriteFood.Should().BeEmpty();
+            testMonster.FavouriteFood.Should().ContainSingle().Which.Should().Be("People");
 
             testMonster.HolidayLake.Should().NotBeNull();
             testMonster.HolidayLake.Id.Should().Be(1);
@@ -228,7 +231,7 @@ namespace Tests
             testMonster.Sounds.Should().BeEquivalentTo(expectedSounds);
 
             testMonster.FavouriteFood.Should().NotBeNull();
-            testMonster.FavouriteFood.Should().BeEmpty();
+            testMonster.FavouriteFood.Should().ContainSingle().Which.Should().Be("People");
 
             testMonster.HolidayLake.Should().NotBeNull();
             //testMonster.HolidayLake.Id.Should().Be(1);

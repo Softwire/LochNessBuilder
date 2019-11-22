@@ -1,7 +1,7 @@
 # LochNessBuilder
 
 A C# Builder library to automate and commonise creation of objects for tests.
-You can define a basic builder that wires up default values, which all tests can then use as-is, or add further customisations for specific tests.
+You can define a basic builder that wires up default values, which all tests can then use as-is, or add further customisations on top of that basic builder for specific tests.
 
 Note that v3.0 has made a lot of superficial changes to the API. See below for details
 
@@ -110,10 +110,11 @@ Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
 
 There are further docs down below, but some particular notes on common situations and easy mistakes to make...
 
-* The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. If you're setting an object property then you don't probably don't want that; you probably want to use `.WithFactory()`.
+* The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. As a result it is constrained to only those types which are passed-by-value.
+  * If you're setting an object property then you must use eithr `.WithSharedRef()` or `.WithFactory()` depending on whether you want different outputs to have different objects, or not.
 * The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
-  * It wil create distinct `IEnumerable` objects for each object built.
-  * If you have (or want to create) the specific Enumerable, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
+  * It will create distinct `IEnumerable` objects for each object built, even if you gave it an appropriate `IEnumerable` yourself - the built object will get a new `IEnumerable` collection.
+  * If you want to specifically create your `IEnumerable`, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
 * Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
   * All it does is call `.WithSequentialFrom(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
 * If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
@@ -131,7 +132,9 @@ There are further docs down below, but some particular notes on common situation
 Please examine the XML docs for full details. However, in simplified form, we have:
 
 * ##### `With()`
-  * Set a property to a value.
+  * Sets a property to a value.
+* ##### `WithSharedRef()`
+  * Sets a ReferenceType property with the given object, assinging the same object ref to all output objects.
 * ##### `WithSequentialFrom()`
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
 * ##### `WithSequentialIds()`
@@ -309,6 +312,8 @@ public void WeirdStatefulBuilder()
 
 Note that such usages are stretching this library beyond the bounds of what it is intended for. You're likely better off building all the monsters up-front, and then updating them after the fact!
 
+* `With(m => m.SubObject, someExistingObject)` intended re-use the same object on every TInstance, is now `WithSharedRef(m => m.SubObject, someExistingObject)`.
+* `Add(...)` is now `WithAddToCollection(...)`.
 
 The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
 ## TODOs
