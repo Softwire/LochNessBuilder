@@ -281,14 +281,6 @@ namespace LochNessBuilder
             return WithFactory(selector, valueFactory, null);
         }
 
-        private Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory, Type explicitValueType)
-        {
-            Expression<Func<TProp>> valueInvoker = () => valueFactory();
-            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
-
-            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
-        }
-
         /// <summary>
         /// Sets an IEnumerable property on the TInstance, using the output from a factory method invoked at Build time.
         /// As a result each TInstance built, will get a different value for the Property.
@@ -305,12 +297,24 @@ namespace LochNessBuilder
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
             var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
 
-            return WithFactory(selector, () => {
-                var elements = numberOfValues.Times(valueFactory);
-                var typedElementsObject = suitableIEnumerableCreator(elements);
-                return typedElementsObject;
-            }, propType);
+            return WithFactory(
+                selector,
+                () => {
+                    var elements = numberOfValues.Times(valueFactory);
+                    var typedElementsObject = suitableIEnumerableCreator(elements);
+                    return typedElementsObject;
+                },
+                propType);
         }
+
+        private Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory, Type explicitValueType)
+        {
+            Expression<Func<TProp>> valueInvoker = () => valueFactory();
+            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
+
+            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
+        }
+
         #endregion
 
         #region WithBuilt/Builder
