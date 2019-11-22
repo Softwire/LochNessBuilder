@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -27,6 +26,7 @@ namespace LochNessBuilder
         /// </summary>
         public static Builder<TInstance> New => new Builder<TInstance>();
 
+        #region Building
         private IEnumerable<Action<TInstance>> Blueprint { get; }
         private IEnumerable<Action<TInstance>> PostBuildBlueprint { get; }
         private const int NumberOfElementsToAddToNewIEnumerable = 3;
@@ -71,6 +71,7 @@ namespace LochNessBuilder
 
             return result;
         }
+        #endregion
 
         #region Arbitrary Action Setups
         /// <summary>
@@ -99,7 +100,7 @@ namespace LochNessBuilder
         #endregion
 
         /*
-         * Map of Dependencies.
+         * Map of Dependencies between setup methods
          *
          * With() : Base method
          *  called by WithSharedRef()
