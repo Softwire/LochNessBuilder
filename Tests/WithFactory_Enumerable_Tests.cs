@@ -40,10 +40,40 @@ namespace Tests
         public void WithFactory_Enumerable_PopulatesTheWholeFirstListBeforeStartingTheNext_WhenMultiBuilding()
         {
             var outputs = Builder<TestObject>.New.WithFactory(o => o.LongListProp, () => DateTime.Now.Ticks).Build(2);
-            var result = outputs[0].LongListProp.Concat(outputs[1].LongListProp).ToList();
-            result.Should().HaveCount(6);
-            result.Should().OnlyHaveUniqueItems();
-            result.Should().BeInAscendingOrder();
+            var out0 = outputs[0].LongListProp;
+            var out1 = outputs[1].LongListProp;
+            out0.Should().HaveCount(3);
+            out1.Should().HaveCount(3);
+            out0.Should().OnlyHaveUniqueItems();
+            out1.Should().OnlyHaveUniqueItems();
+            out0.Max().Should().BeLessThan(out1.Min());
+        }
+
+        [Test]
+        public void WithFactory_Single_DoesNotInvokeTheFactoryMethodUntilAskedToBuild()
+        {
+            bool hasRun = false;
+            Func<int> setup = () => { hasRun = true; return 3; };
+            var builder = Builder<TestObject>.New.WithFactory(o => o.ListProp, setup);
+            hasRun.Should().BeFalse();
+            var output = builder.Build();
+            hasRun.Should().BeTrue();
+            output.ListProp.First().Should().Be(3);
+        }
+
+        [Test]
+        public void WithFactory_Single_DoesInvokeTheFactoryMethodToBuildAnIEnumerable()
+        {
+            bool hasRun = false;
+            Func<int> setup = () => { hasRun = true; return 3; };
+            var builder = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, setup);
+            hasRun.Should().BeFalse();
+            var output = builder.Build();
+            hasRun.Should().BeTrue();
+
+            hasRun = false;
+            output.IEnumerableProp.First().Should().Be(3);
+            hasRun.Should().BeFalse();
         }
 
         [Test]
@@ -57,22 +87,24 @@ namespace Tests
         public void WithFactory_Enumerable_DoesNotShareTheListItself()
         {
             var outputs = Builder<TestObject>.New.WithFactory(o => o.ObjectListProp, () => new object()).Build(2);
-            outputs.Select(o => o.ObjectListProp).Should().OnlyHaveUniqueItems();
+            outputs[0].ObjectListProp.Should().NotBeSameAs(outputs[1].ObjectListProp);
         }
 
         [Test]
         public void WithFactory_Enumerable_CanSetAnIEnumerableProp_Array()
         {
-            var output = Builder<TestObject>.New.WithFactory(o => o.ArrayProp, () => new int[2]).Build();
+            var output = Builder<TestObject>.New.WithFactory(o => o.ArrayProp, () => 0).Build();
             output.ArrayProp.Should().NotBeNull();
-            output.ArrayProp.Should().HaveCount(2);
+            output.ArrayProp.Should().HaveCount(3);
             output.ArrayProp.Should().AllBeEquivalentTo(0);
         }
 
         [Test]
         public void WithFactory_Enumerable_CanSetAnIEnumerableProp_List()
         {
-            var output = Builder<TestObject>.New.WithFactory(o => o.ListProp, () => new List<int> { 2, 3, 4 }).Build();
+            var counter = 2;
+            Func<int> setup = () => counter++; //returns the value it had prior to incrementing ... hence 2, 3, 4.
+            var output = Builder<TestObject>.New.WithFactory(o => o.ListProp, setup).Build();
             output.ListProp.Should().NotBeNull();
             output.ListProp.Should().HaveCount(3);
             output.ListProp.First().Should().Be(2);
@@ -82,18 +114,13 @@ namespace Tests
         [Test]
         public void WithFactory_Enumerable_CanSetAnIEnumerableProp_IEnumerable()
         {
-            var output = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, Yield_1_2_3).Build();
+            var counter = 1;
+            Func<int> setup = () => counter++; //returns the value it had prior to incrementing ... hence 2, 3, 4.
+            var output = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, setup, 4).Build();
             output.IEnumerableProp.Should().NotBeNull();
-            output.IEnumerableProp.Should().HaveCount(3);
+            output.IEnumerableProp.Should().HaveCount(4);
             output.IEnumerableProp.First().Should().Be(1);
-            output.IEnumerableProp.Last().Should().Be(3);
-        }
-
-        private IEnumerable<int> Yield_1_2_3()
-        {
-            yield return 1;
-            yield return 2;
-            yield return 3;
+            output.IEnumerableProp.Last().Should().Be(4);
         }
 
         [Test]
