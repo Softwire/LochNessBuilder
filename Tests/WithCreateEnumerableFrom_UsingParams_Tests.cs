@@ -10,10 +10,10 @@ namespace Tests
 {
     [TestFixture]
     // ReSharper disable once InconsistentNaming
-    internal class WithCreateEnumerableFrom_Tests
+    internal class WithCreateEnumerableFrom_UsingParams_Tests
     {
         [Test]
-        public void WithCreateEnumerableFrom_SetsAProperty()
+        public void WithCreateEnumerableFrom_UsingParams_SetsAProperty()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ArrayProp, 1, 2).Build();
             output.ArrayProp.Should().NotBeNull();
@@ -21,14 +21,14 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_DoesNotReuseTheOutputObject()
+        public void WithCreateEnumerableFrom_UsingParams_DoesNotReuseTheOutputObject()
         {
             var outputs = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ArrayProp, 1, 2).Build(2);
             outputs[1].ArrayProp.Should().NotBeSameAs(outputs[0].ArrayProp);
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn()
+        public void WithCreateEnumerableFrom_UsingParams_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn()
         {
             var originalArrayObject = new[] { 1, 2 };
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ArrayProp, originalArrayObject).Build();
@@ -36,7 +36,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIEnumerableProps()
+        public void WithCreateEnumerableFrom_UsingParams_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIEnumerableProps()
         {
             var originalArrayObject = new[] { 1, 2 };
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IEnumerableProp, originalArrayObject).Build();
@@ -44,7 +44,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIQueryableProps()
+        public void WithCreateEnumerableFrom_UsingParams_DoesNotUseTheInputObjectDirectlyIfArrayIsPassedIn_EvenForIQueryableProps()
         {
             var originalArrayObject = new[] { 1, 2 };
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IQueryableProp, originalArrayObject).Build();
@@ -53,7 +53,7 @@ namespace Tests
 
         #region PopulatesMostFormsOfConcreteIEnumerable
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_Array()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_Array()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ArrayProp, 1, 2).Build();
             output.ArrayProp.Should().BeOfType<int[]>();
@@ -64,7 +64,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_List()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_List()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ListProp, 1, 2).Build();
             output.ListProp.Should().BeOfType<List<int>>();
@@ -75,7 +75,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_Queue()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_Queue()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.QueueProp, 1, 2).Build();
             output.QueueProp.Should().BeOfType<Queue<int>>();
@@ -86,7 +86,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_Stack()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_Stack()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.StackProp, 1, 2).Build();
             output.StackProp.Should().BeOfType<Stack<int>>();
@@ -97,7 +97,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_HashSet()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_HashSet()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.HashSetProp, 1, 2).Build();
             output.HashSetProp.Should().BeOfType<HashSet<int>>();
@@ -108,7 +108,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_Collection()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_Collection()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.CollectionProp, 1, 2).Build();
             output.CollectionProp.Should().BeOfType<Collection<int>>();
@@ -119,7 +119,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostFormsOfConcreteIEnumerable_ReadOnlyCollection()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostFormsOfConcreteIEnumerable_ReadOnlyCollection()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ReadOnlyCollectionProp, 1, 2).Build();
             output.ReadOnlyCollectionProp.Should().BeOfType<ReadOnlyCollection<int>>();
@@ -131,7 +131,7 @@ namespace Tests
         #endregion
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesAPureIEnumerable()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesAPureIEnumerable()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IEnumerableProp, 1, 2).Build();
             output.IEnumerableProp.Should().BeEquivalentTo(1, 2);
@@ -141,7 +141,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostInterfacesDerivingFromIEnumerable_IQueryable()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostInterfacesDerivingFromIEnumerable_IQueryable()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IQueryableProp, 1, 2).Build();
             output.IQueryableProp.Should().BeEquivalentTo(1, 2);
@@ -152,7 +152,7 @@ namespace Tests
 
         #region PopulatesMostInterfacesDerivingFromIEnumerable
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostInterfacesDerivingFromIEnumerable_ICollection()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostInterfacesDerivingFromIEnumerable_ICollection()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ICollectionProp, 1, 2).Build();
             output.ICollectionProp.Should().BeOfType<List<int>>();
@@ -163,7 +163,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostInterfacesDerivingFromIEnumerable_IList()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostInterfacesDerivingFromIEnumerable_IList()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IListProp, 1, 2).Build();
             output.IListProp.Should().BeOfType<List<int>>();
@@ -174,7 +174,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostInterfacesDerivingFromIEnumerable_ISet()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostInterfacesDerivingFromIEnumerable_ISet()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ISetProp, 1, 2).Build();
             output.ISetProp.Should().BeOfType<HashSet<int>>();
@@ -185,7 +185,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_PopulatesMostInterfacesDerivingFromIEnumerable_IReadOnlyCollection()
+        public void WithCreateEnumerableFrom_UsingParams_PopulatesMostInterfacesDerivingFromIEnumerable_IReadOnlyCollection()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IReadOnlyCollectionProp, 1, 2).Build();
             output.IReadOnlyCollectionProp.Should().BeOfType<List<int>>();
@@ -197,7 +197,7 @@ namespace Tests
         #endregion
 
         [Test]
-        public void WithCreateEnumerableFrom_ThrowsASensibleErrorIfUnableToPopulateAConcreteIEnumerableProperty()
+        public void WithCreateEnumerableFrom_UsingParams_ThrowsASensibleErrorIfUnableToPopulateAConcreteIEnumerableProperty()
         {
             Action builderSetupAction = () => Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ConcurrentBagProp, 1, 2);
             builderSetupAction.Should().Throw<NotSupportedException>()
@@ -206,7 +206,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_ThrowsASensibleErrorIfUnableToPopulateAnIEnumerableInterfaceroperty()
+        public void WithCreateEnumerableFrom_UsingParams_ThrowsASensibleErrorIfUnableToPopulateAnIEnumerableInterfaceroperty()
         {
             Action builderSetupAction = () => Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.IOrderedEnumerableProp, 1, 2);
             builderSetupAction.Should().Throw<NotSupportedException>()
@@ -215,28 +215,28 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_HandlesPopulatingWithBiggerNumericTypes()
+        public void WithCreateEnumerableFrom_UsingParams_HandlesPopulatingWithBiggerNumericTypes()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.LongListProp, 1, 2).Build();
             output.LongListProp.Should().BeOfType<List<long>>();
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_HandlesPopulatingWithBiggerObjectTypes()
+        public void WithCreateEnumerableFrom_UsingParams_HandlesPopulatingWithBiggerObjectTypes()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.ObjectListProp, new TestSubObject(), new TestSubObject()).Build();
             output.ObjectListProp.Should().BeOfType<List<object>>();
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_ForcesCastingToSmallerNumericTypes()
+        public void WithCreateEnumerableFrom_UsingParams_ForcesCastingToSmallerNumericTypes()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom<short>(o => o.ShortListProp, 1, 2).Build(); //This won't compile without the '<short>' Method TypeParam, or explicit '(short)' casts.
             output.ShortListProp.Should().BeOfType<List<short>>();
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_ThrowsClearErrorWhenPopulatingWithSmallerObjectTypes()
+        public void WithCreateEnumerableFrom_UsingParams_ThrowsClearErrorWhenPopulatingWithSmallerObjectTypes()
         {
             Action builderSetupAction = () => Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.SubObjectListProp, new object(), new object());
             builderSetupAction.Should().Throw<NotSupportedException>()
@@ -245,7 +245,7 @@ namespace Tests
         }
 
         [Test]
-        public void WithCreateEnumerableFrom_HandlesMixedTypeParams()
+        public void WithCreateEnumerableFrom_UsingParams_HandlesMixedTypeParams()
         {
             var output = Builder<TestObject>.New.WithCreateEnumerableFrom(o => o.LongListProp, 3, 4L, (short)2).Build();
             output.LongListProp.Should().BeOfType<List<long>>();
