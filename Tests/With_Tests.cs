@@ -45,6 +45,13 @@ namespace Tests
         }
 
         [Test]
+        public void With_AssignsNullToObjectProp()
+        {
+            var output = Builder<TestObject>.New.WithSharedRef(o => o.ObjectProp, null).Build();
+            output.ObjectProp.Should().BeNull();
+        }
+
+        [Test]
         public void With_SharesObjectWhenSetupWithThatIntent()
         {
             var outputs = Builder<TestObject>.New.WithSharedRef(o => o.ObjectProp, new object()).Build(2);
@@ -62,6 +69,13 @@ namespace Tests
         public void With_ThrowsClearErrorOnMonodirectionalCasts()
         {
             Action builderSetupAction = () => Builder<TestObject>.New.WithSharedRef(o => o.SubObjectProp, new object());
+            builderSetupAction.Should().Throw<ArgumentException>().WithMessage("Expression of type 'System.Object' cannot be used for assignment to type 'Tests.TestSubObject'");
+        }
+
+        [Test]
+        public void With_ThrowsClearErrorOnCastsForcedByTypeParams()
+        {
+            Action builderSetupAction = () => Builder<TestObject>.New.WithSharedRef<object>(o => o.SubObjectProp, new TestObject());
             builderSetupAction.Should().Throw<ArgumentException>().WithMessage("Expression of type 'System.Object' cannot be used for assignment to type 'Tests.TestSubObject'");
         }
     }
