@@ -56,18 +56,45 @@ namespace Tests
         [Test]
         public void WithFactory_Single_CanDirectlySetAnIEnumerableProp_IEnumerable()
         {
-            var output = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, Yield_1_2_3).Build();
+            var output = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, Yield_1_2_3_WithTracking).Build();
             output.IEnumerableProp.Should().NotBeNull();
             output.IEnumerableProp.Should().HaveCount(3);
             output.IEnumerableProp.First().Should().Be(1);
             output.IEnumerableProp.Last().Should().Be(3);
         }
 
-        private IEnumerable<int> Yield_1_2_3()
+        private int counter = 0;
+        private IEnumerable<int> Yield_1_2_3_WithTracking()
         {
+            counter++;
             yield return 1;
             yield return 2;
             yield return 3;
+            counter++;
+        }
+
+        [Test]
+        public void WithFactory_Single_DoesNotInvokeAnIEnumerableWhenSettingItDirectly()
+        {
+            counter = 0;
+            var builder = Builder<TestObject>.New.WithFactory(o => o.IEnumerableProp, Yield_1_2_3_WithTracking);
+            counter.Should().Be(0);
+            var output = builder.Build();
+            counter.Should().Be(0);
+            output.IEnumerableProp.Last();
+            counter.Should().Be(2);
+        }
+
+        [Test]
+        public void WithFactory_Single_DoesNotInvokeTheFactoryMethodUntilAskedToBuild()
+        {
+            bool hasRun = false;
+            Func<int> setup = () => { hasRun = true; return 3; };
+            var builder = Builder<TestObject>.New.WithFactory(o => o.IntProp, setup);
+            hasRun.Should().BeFalse();
+            var output = builder.Build();
+            hasRun.Should().BeTrue();
+            output.IntProp.Should().Be(3);
         }
 
         [Test]
