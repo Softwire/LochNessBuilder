@@ -445,19 +445,50 @@ namespace LochNessBuilder
         public Builder<TInstance> WithAddToCollection<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, TProp value)
         {
             var instance = GetInstance();
-            var collectionGetter = typeof(TInstance).GetProperty(selector.GetMemberName()).GetGetMethod();
+            var prop = GetProp(selector, instance);
+
             var addMethod = typeof(ICollection<TProp>).GetMethod("Add");
             var addParameter = Expression.Constant(value, typeof(TProp));
 
-            var getCollection = Expression.Call(instance, collectionGetter);
-            var addItem = Expression.Call(getCollection, addMethod, addParameter);
-            var addItemToCollection = Expression.Lambda<Action<TInstance>>(addItem, instance).Compile();
+            var addItem = Expression.Call(prop, addMethod, addParameter);
+            var addInTryCatch = WrapActionExpressionIn_Try_Catch_RethrowWithAdditionalMessage(addItem, $"Error occurred when attempting to '.Add' to the property '{selector.GetMemberName()}'.");
 
-            return new Builder<TInstance>(Blueprint.Plus(addItemToCollection), PostBuildBlueprint);
+            var addItemToCollectionAction = Expression.Lambda<Action<TInstance>>(addInTryCatch, instance).Compile();
+
+            return new Builder<TInstance>(Blueprint.Plus(addItemToCollectionAction), PostBuildBlueprint);
         }
+
         #endregion
 
         #region Object reflection helpers
+        private Expression WrapActionExpressionIn_Try_Catch_ThrowNewMessage(Expression coreExpression, string newMessage)
+        {
+            return
+                Expression.TryCatch(
+                    coreExpression,
+                Expression.Catch(typeof(Exception),
+                    Expression.Throw(
+                        Expression.Constant(new Exception(newMessage))
+                    )
+                ));
+        }
+
+        private Expression WrapActionExpressionIn_Try_Catch_RethrowWithAdditionalMessage(Expression coreExpression, string additionalMessage)
+        {
+            var caughtExceptionParameter = Expression.Parameter(typeof(Exception));
+
+            //We want to call `new Exception(additionalMessage, caughtException)`
+            var ctorForExceptionWithMessageAndInnerException = typeof(Exception).GetConstructor(new[] {typeof(string), typeof(Exception)});
+            var replacementExceptionExpresion = Expression.New(ctorForExceptionWithMessageAndInnerException, Expression.Constant(additionalMessage), caughtExceptionParameter);
+
+            return
+                Expression.TryCatch(
+                    coreExpression,
+                Expression.Catch(caughtExceptionParameter,
+                    Expression.Throw( replacementExceptionExpresion )
+                ));
+        }
+
         private static ParameterExpression GetInstance()
         {
             return Expression.Parameter(typeof(TInstance), typeof(TInstance).FullName);
