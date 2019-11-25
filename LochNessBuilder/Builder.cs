@@ -210,26 +210,23 @@ namespace LochNessBuilder
         public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
-            
-            // We want to do this once, up-front, to verify that we can create an appropriate type.
-            // So that if we *cant* then we get the error thrown immediately, rather than later.
-            var proofOfConcept = GetIEnumerableAsAppropriateType(values, propType);
+            var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
 
-            return WithFactory(selector, () => GetIEnumerableAsAppropriateType(values, propType), propType);
+            return WithFactory(selector, () => suitableIEnumerableCreator(values), propType);
         }
 
         /// <summary>
-        /// Given an IEnumerable of values, and a TargetType that implements IEnumerable[T],
-        /// creates a concrete implementation of IEnumerable which satisfies TargetType.
+        /// Given a TargetType that implements IEnumerable[T], and the type TProp, this method identifies
+        /// how to create a concrete implementation of IEnumerable[TProp] which satisfies TargetType.
         /// </summary>
         /// <remarks>
         /// We achieve this by having a bunch of Types that we *know* how to make, and then
         /// checking whether any of these would satisfy the TargetType.
-        /// e.g. if TargetType is ISet[T] then a List[T] is no good, by HashSet[T] will be
+        /// e.g. if TargetType is ISet[T] then a List[T] is no good, but HashSet[T] will be
         /// suitable, so construct that.
         /// </remarks>
-        /// <typeparam name="TProp">The type of the objects inside the IEnumerables being handled.</typeparam>
-        private IEnumerable<TProp> GetIEnumerableAsAppropriateType<TProp>(IEnumerable<TProp> values, Type targetType)
+        /// <typeparam name="TProp">The type of the objects which we're going to get given, to put inside the IEnumerable being handled.</typeparam>
+        private Func<IEnumerable<TProp>, IEnumerable<TProp>> EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(Type targetType)
         {
             var concreteInitialisers = new Dictionary<Type, Func<IEnumerable<TProp>, IEnumerable<TProp>>>
             {
@@ -248,13 +245,12 @@ namespace LochNessBuilder
             {
                 if (targetType.IsAssignableFrom(concreteType))
                 {
-                    var valuesInRelevantConcreteType = concreteInitialisers[concreteType](values);
-                    return valuesInRelevantConcreteType;
+                    return concreteInitialisers[concreteType];
                 }
             }
 
             var T = typeof(TProp).Name;
-            throw new NotSupportedException($"From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType that was to populated was: " + targetType.ToString());
+            throw new NotSupportedException($"From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType that was to be populated was: " + targetType.ToString());
         }
         #endregion
 
@@ -293,12 +289,13 @@ namespace LochNessBuilder
             int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
+            var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
 
             return WithFactory(selector, () => {
                 var elements = numberOfValues.Times(valueFactory);
-                var typedElementsObject = GetIEnumerableAsAppropriateType(elements, propType);
+                var typedElementsObject = suitableIEnumerableCreator(elements);
                 return typedElementsObject;
-            });
+            }, propType);
         }
         #endregion
 
