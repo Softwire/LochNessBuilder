@@ -84,7 +84,8 @@ Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
 
 There are further docs down below, but some particular notes on common situations and easy mistakes to make...
 
-* The standard `With()` will share the provided argument with all objects that get Built. If you're setting an object then you don't probably don't want that; you probably want to use `.WithFactory()`.
+* The standard `.With()` method (and also `.WithEnumerable()`, and `.WithOneOf()` when it loops) will share the provided value(s) with all objects that get Built. If you're setting an object property then you don't probably don't want that; you probably want to use `.WithFactory()`.
+* The `.WithEnumerable()` should only be used if you want to make use of its ability to create most kinds of enumerable for you. If you have (or want to create) the specific Enumerable, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
 * Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
   * All it does is call `.WithOneOf(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
 * If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
@@ -131,7 +132,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 
 ```csharp
    //An example of all the available methods:
-    public class Monster
+    public class MonsQQter
     {
         public int Id { get; set; }
         public string Nationality { get; set; }

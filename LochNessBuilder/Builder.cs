@@ -163,27 +163,16 @@ namespace LochNessBuilder
         #region WithEnumerable
         /// <summary>
         /// Sets a property of type IEnumerable on the constructed instance.
-        /// Builds a relevant concrete object from the provided IEnumerable, to satisfy the property.
-        /// </summary>
-        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
-        /// <param name="values">An IEnumerable which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
-        public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, IEnumerable<TProp> values)
-        {
-            var propType = GetDeclaredTypeOfIEnumerableProp(selector);
-            var valuesInTypedIEnumerable = GetIEnumerableAsAppropriateType(values, propType);
-            return With(selector, valuesInTypedIEnumerable, propType);
-        }
-
-        /// <summary>
-        /// Sets a property of type IEnumerable on the constructed instance.
+        /// Builds a relevant concrete object from the provided params, to satisfy the property.
         /// </summary>
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
         /// <param name="values">One or more values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
         public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
         {
-            return WithEnumerable(selector, (IEnumerable<TProp>) values);
+            var propType = GetDeclaredTypeOfIEnumerableProp(selector);
+            var valuesInTypedIEnumerable = GetIEnumerableAsAppropriateType(values, propType);
+            return With(selector, valuesInTypedIEnumerable, propType);
         }
 
         /// <summary>
@@ -203,10 +192,11 @@ namespace LochNessBuilder
             {
                 { typeof(IEnumerable<TProp>), (vals) => vals },
                 { typeof(IQueryable<TProp>), (vals) => vals.AsQueryable() },
-                { typeof(TProp[]), (vals) => vals.ToArray() },
                 { typeof(List<TProp>), (vals) => vals.ToList() },
+                { typeof(TProp[]), (vals) => vals.ToArray() },
                 { typeof(HashSet<TProp>), (vals) => new HashSet<TProp>(vals) },
                 { typeof(Queue<TProp>), (vals) => new Queue<TProp>(vals) },
+                { typeof(Stack<TProp>), (vals) => new Stack<TProp>(vals) },
                 { typeof(Collection<TProp>), (vals) => new Collection<TProp>(vals.ToList()) },
                 { typeof(ReadOnlyCollection<TProp>), (vals) => vals.ToList().AsReadOnly() },
             };
@@ -219,13 +209,9 @@ namespace LochNessBuilder
                     return valuesInRelevantConcreteType;
                 }
             }
-            
-            throw EnumerableTypeNotSupportedException(targetType);
-        }
 
-        private Exception EnumerableTypeNotSupportedException(Type propType)
-        {
-            throw new NotSupportedException("The IEnumerable handler knows how to create Array, List<>, HashSet<>, Queue<>, Collection<>, ReadOnlyCollection<>, or IQueryable<>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType was :" + propType.ToString());
+            var T = typeof(TProp).Name;
+            throw new NotSupportedException($"From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType that was to populated was: " + targetType.ToString());
         }
         #endregion
 
