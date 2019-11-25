@@ -61,7 +61,7 @@ namespace Tests
         [Test]
         public void MultiBuild()
         {
-            var testMonsters = SimpleMonsterBuilder.New.Build(5).ToList();
+            var testMonsters = SimpleMonsterBuilder.New.Build(5);
 
             testMonsters.Should().HaveCount(5);
 
@@ -73,9 +73,18 @@ namespace Tests
         }
 
         [Test]
+        public void MultiBuildIsEager()
+        {
+            var counter = 0;
+            SimpleMonsterBuilder.New.WithSetup(_ => {counter++;} ).Build(5);
+
+            counter.Should().Be(5);
+        }
+
+        [Test]
         public void OverriddenPropertyConfig()
         {
-            var testMonsters = SimpleMonsterBuilder.New.With(t => t.Colour, "Purple").Build(2).ToList();
+            var testMonsters = SimpleMonsterBuilder.New.With(t => t.Colour, "Purple").Build(2);
 
             testMonsters.First().Id.Should().Be(1);
             testMonsters.First().Colour.Should().Be("Purple");
@@ -120,7 +129,7 @@ namespace Tests
                     m.Age = previousId;
                     previousId = m.Id;
                 })
-                .Build(3).ToList();
+                .Build(3);
 
             monsters.Select(m => m.Id).Should().BeEquivalentTo(1, 2, 3);
             monsters.Select(m => m.Age).Should().BeEquivalentTo(0, 1, 2);

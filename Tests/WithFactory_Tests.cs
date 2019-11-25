@@ -20,7 +20,7 @@ namespace Tests
         [Test]
         public void WithFactory_DoesNotReUseTheResultantObject()
         {
-            var outputs = Builder<TestObject>.New.WithFactory(o => o.ObjectProp, () => new object()).Build(2).ToList();
+            var outputs = Builder<TestObject>.New.WithFactory(o => o.ObjectProp, () => new object()).Build(2);
             outputs[0].ObjectProp.Should().NotBeSameAs(outputs[1].ObjectProp);
         }
 
