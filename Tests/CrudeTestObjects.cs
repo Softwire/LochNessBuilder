@@ -51,11 +51,4 @@ namespace Tests
 
         public TestObject AssociatedTestObject { get; set; }
     }
-
-    [BuilderFactory]
-    internal static class RegisteredSubObjectBuilder
-    {
-        public static Builder<TestSubObject> Other => Builder<TestSubObject>.New.With(subObj => subObj.StringProp, "OtherBuilder");
-        public static Builder<TestSubObject> New => Builder<TestSubObject>.New.With(subObj => subObj.StringProp, "NewBuilder");
-    }
 }
