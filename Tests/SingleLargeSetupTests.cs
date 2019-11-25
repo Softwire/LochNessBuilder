@@ -156,7 +156,7 @@ namespace Tests
         [Test]
         public void CanBuildMultiple()
         {
-            var testMonsters = ComplexMonsterBuilder.New.Build(5).ToList();
+            var testMonsters = ComplexMonsterBuilder.New.Build(5);
 
             testMonsters.Should().HaveCount(5);
 
