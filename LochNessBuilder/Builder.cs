@@ -42,9 +42,10 @@ namespace LochNessBuilder
         /// Construct multiple TInstances, applying all configured steps to each one in turn.
         /// (All steps are apply to the first TInstance, before the 2nd one is constructed.)
         /// </summary>
-        public IEnumerable<TInstance> Build(int quantity)
+        public List<TInstance> Build(int quantity)
         {
-            return quantity.Times(Build);
+            //We reify this collection, rather than leaving it lazy, to ensure that any side-effects have happened.
+            return quantity.Times(Build).ToList();
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace Tests
         [Test]
         public void With_SharesObject()
         {
-            var outputs = Builder<TestObject>.New.With(o => o.ObjectProp, new object()).Build(2).ToList();
+            var outputs = Builder<TestObject>.New.With(o => o.ObjectProp, new object()).Build(2);
             outputs[0].ObjectProp.Should().BeSameAs(outputs[1].ObjectProp);
         }
 

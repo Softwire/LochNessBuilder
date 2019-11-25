@@ -75,7 +75,7 @@ namespace Tests
         [Test]
         public void WithOneOf_SharesTheGivenObjects()
         {
-            var outputs = Builder<TestObject>.New.WithOneOf(o => o.ObjectProp, new object(), new object()).Build(5).ToList();
+            var outputs = Builder<TestObject>.New.WithOneOf(o => o.ObjectProp, new object(), new object()).Build(5);
             outputs[2].ObjectProp.Should().BeSameAs(outputs[0].ObjectProp);
             outputs[4].ObjectProp.Should().BeSameAs(outputs[0].ObjectProp);
             outputs[3].ObjectProp.Should().BeSameAs(outputs[1].ObjectProp);
@@ -103,11 +103,11 @@ namespace Tests
             counter.Should().Be(1);
             builder.Build();
             counter.Should().Be(2);
-            builder.Build(1).ToList();
+            builder.Build(1);
             counter.Should().Be(3);
             builder.Build();
             counter.Should().Be(4);
-            builder.Build(3).ToList();
+            builder.Build(3);
             counter.Should().Be(7);
             builder.Build();
             counter.Should().Be(8);
