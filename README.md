@@ -111,7 +111,7 @@ Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
 There are further docs down below, but some particular notes on common situations and easy mistakes to make...
 
 * The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. As a result it is constrained to only those types which are passed-by-value.
-  * If you're setting an object property then you must use eithr `.WithSharedRef()` or `.WithFactory()` depending on whether you want different outputs to have different objects, or not.
+  * If you're setting an object property then you must use either `.WithSharedRef()` or `.WithFactory()` depending on whether you want different outputs to have different objects, or not.
 * The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
   * It will create distinct `IEnumerable` objects for each object built, even if you gave it an appropriate `IEnumerable` yourself - the built object will get a new `IEnumerable` collection.
   * If you want to specifically create your `IEnumerable`, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
