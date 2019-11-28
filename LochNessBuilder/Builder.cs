@@ -419,6 +419,18 @@ namespace LochNessBuilder
         }
         #endregion
 
+        #region WithNew
+        /// <summary>
+        /// Sets an object property by invoking the default constructor each time.<br/>
+        /// Literally just a convenient short-hand for `WithFactory(selector, () => new TProp())`
+        /// </summary>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        public Builder<TInstance> WithNew<TProp>(Expression<Func<TInstance, TProp>> selector) where TProp : class, new()
+        {
+            return WithFactory(selector, () => new TProp());
+        }
+        #endregion
+
         #region WithAddToCollection
         /// <summary>
         /// Adds an item to an ICollection on the TInstance.
