@@ -169,9 +169,9 @@ namespace LochNessBuilder
         private Builder<TInstance> With_Internal<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value)
         {
             var val = Expression.Constant(value, typeof(TProp));
-            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, val);
+            var settingLambda = CreateAssignmentLambdaFromPropExpressionAndValueExpression(selector, val);
 
-            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
+            return new Builder<TInstance>(Blueprint.Plus(settingLambda), PostBuildBlueprint);
         }
         #endregion
 
@@ -310,9 +310,9 @@ namespace LochNessBuilder
         private Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory, Type explicitValueType)
         {
             Expression<Func<TProp>> valueInvoker = () => valueFactory();
-            var settingLamda = CreateAssignmentLamdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
+            var settingLambda = CreateAssignmentLambdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
 
-            return new Builder<TInstance>(Blueprint.Plus(settingLamda), PostBuildBlueprint);
+            return new Builder<TInstance>(Blueprint.Plus(settingLambda), PostBuildBlueprint);
         }
 
         #endregion
@@ -515,7 +515,7 @@ namespace LochNessBuilder
             return prop.Type;
         }
 
-        private static Action<TInstance> CreateAssignmentLamdaFromPropExpressionAndValueExpression<TProp>(
+        private static Action<TInstance> CreateAssignmentLambdaFromPropExpressionAndValueExpression<TProp>(
             Expression<Func<TInstance, TProp>> propSelector,
             Expression valueExpression,
             Type valueTypeOverride = null)
