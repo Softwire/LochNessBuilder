@@ -277,9 +277,9 @@ public void WeirdStatefulBuilder()
 
 Note that such usages are stretching this library beyond the bounds of what it is intended for. You're likely better off building all the monsters up-front, and then updating them after the fact!
 
-### Migration to v3.0
+### Migration to v2.0
 
-Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate:
+Lots of method/type names have changed between v1.0 and v2.0, but there's very little _functionality_ change, so it should be very easy to migrate:
 
 * The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
 * `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
