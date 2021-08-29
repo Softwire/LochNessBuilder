@@ -4,18 +4,26 @@
         <TargetFrameworks>netstandard2.0;net451;net461</TargetFrameworks>
         <Version>2.1.0</Version>
         <AssemblyTitle>LochNessBuilder</AssemblyTitle>
-        <Copyright>Copyright ©  2015</Copyright>
+        <Copyright>Copyright © 2015</Copyright>
         <Product>LochNessBuilder</Product>
-        <PackageLicenseFile>MIT-LICENSE.txt</PackageLicenseFile>
         <Company>Softwire</Company>
         <Authors>Softwire</Authors>
         <AssemblyVersion>2.1.0.0</AssemblyVersion>
         <FileVersion>2.1.0.0</FileVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageOutputPath>../nuget</PackageOutputPath>
+        <PackageLicenseFile>MIT-LICENSE.txt</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Description>A Builder library to automate the creation of objects for testing purposes</Description>
+        <PackageTags>test builder</PackageTags>
     </PropertyGroup>
 
     <ItemGroup>
       <None Include="..\MIT-LICENSE.txt">
+        <Pack>True</Pack>
+        <PackagePath></PackagePath>
+      </None>
+      <None Include="..\README.md">
         <Pack>True</Pack>
         <PackagePath></PackagePath>
       </None>
