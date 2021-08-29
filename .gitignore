@@ -148,7 +148,8 @@ publish/
 *.publishproj
 
 # NuGet Packages
-*.nupkg
+#*.nupkg
+#Don't ignore .nupkg files ... we want to keep a record of what was uploaded.
 # The packages folder can be ignored because of Package Restore
 **/packages/*
 # except build/, which is used as an MSBuild target.
@@ -220,6 +221,3 @@ FakesAssemblies/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
-
-# Nupkg files
-*.nupkg
