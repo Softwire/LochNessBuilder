@@ -125,30 +125,30 @@ There are further docs down below, but some particular notes on common situation
 
 Please examine the XML docs for full details. However, in simplified form, we have:
 
-* ##### With()
+* ##### `With()`
   * Set a property to a value.
-* ##### WithOneOf()
+* ##### `WithOneOf()`
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
-* ##### WithSequentialIds()
+* ##### `WithSequentialIds()`
   * Sets a numeric property with increasing numbers, from 1 to int.MaxValue.
-* ##### WithEnumerable()
+* ##### `WithEnumerable()`
   * Provide multiple values, and the builder will create the relevant container and put them all onto each new object
-* ##### WithFactory()
+* ##### `WithFactory()`
   * Provide a factory method, to set a property to a newly created value each time.
-* ##### WithBuilder()
+* ##### `WithBuilder()`
   * Like `WithFactory`, but the factory is specifically the `.Build()` method of the provided `Builder`.
-* ##### WithBuilt()
+* ##### `WithBuilt()`
   * Like `WithBuilder`, but the appropriate `Builder<T>` is found automatically from any classes tagged with `BuilderFactory`, so you don't need to provide any second argument at all ... it just works it all out.
 * ##### _`IEnumerable` variations of `WithFactory()`_
   * The above 3 variations on `WithFactory()` have overloads which simplify the work if the property in question implements `IEnumerable<T>`. Rather than defining a Factory that builds the whole `IEnumerable<T>`, so provide one which simply builds `T`s and the `IEnumerable<>` portion will get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements.
-* ##### Add()
+* ##### `Add()`
   * Add the value to the existing ICollection property.
   * This assumes that an earlier setup method (or possibly the object constructor) has initialised the ICollection beforehand.
-* ##### WithPreBuildSetup()
+* ##### `WithPreBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *before* all the other things.
-* ##### WithSetup()
+* ##### `WithSetup()`
   * Do an arbitrary action to the object being created.
-* ##### WithPostBuildSetup()
+* ##### `WithPostBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *after* all the other things (even in other setup methods are called after this one).
 
 ### Full Example
