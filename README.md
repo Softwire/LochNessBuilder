@@ -192,19 +192,20 @@ Please examine the XML docs for full details. However, in simplified form, we ha
             {
                 var rand = new Random();
                 return Builder<Monster>.New
+                    .With(m => m.Nationality, "Scottish")                                   // All monsters will be 'Scottish'
+
                     .WithSequentialIds(m => m.Id)                                           // Ids will be 1, 2, 3, 4, 5....
-                    .With(m => m.Nationality, "Scottish")                                           // Ids will be 1, 2, 3, 4, 5....
                     // Above is identical to ".With(t => t.Id, Enumerable.Range(1, int.MaxValue))"
 
                     .WithOneOf(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
-                    .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce all three of these sounds.
+                    .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce ALL three of these sounds.
                     // Above is identical to ".WithEnumerable(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
-                    // Above is *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
+                    // Above is *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})". The only difference is that the containing array is not shared.
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())            // All monsters will get their own, distinct (initially empty) List<> object for food.
                     .WithFactory(m => m.Age, () => rand.Next(4))                            // Age might be 2, 4, 1, 4, 3 ...
-                    .WithBuilder(m => m.HolidayLake, LakeBuilder.Minimal)                   // All monsters will have this.HomeLake populated with the result of "LakeBuilder.Minimal.Build()".
+                    .WithBuilder(m => m.HolidayLake, LakeBuilder.Minimal)                   // All monsters will have this.HolidayLake populated with the result of "LakeBuilder.Minimal.Build()".
                     .WithBuilt(m => m.HomeLake)                                             // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered Builder (and 'New' is used preferentially)
                     .WithBuilt(m => m.Egg)                                                  // All monsters will have this.Egg populated with "new Egg()", because no builder has been registered for Eggs.
                     .WithPostBuildSetup(IncludeMonsterInHomeLake)                           // `this.LakeId`, and `this.HomeLake.Monsters` will be updated to honour `this.HomeLake` ... but only at the END of setup. i.e. honouring any later-defined overrides of `this.HomeLake` if configured.
