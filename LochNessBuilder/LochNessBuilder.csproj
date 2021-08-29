@@ -2,13 +2,16 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net451;net461</TargetFrameworks>
-        <Version>2.0.0</Version>
+        <Version>2.1.0</Version>
         <AssemblyTitle>LochNessBuilder</AssemblyTitle>
         <Copyright>Copyright ©  2015</Copyright>
         <Product>LochNessBuilder</Product>
         <PackageLicenseFile>MIT-LICENSE.txt</PackageLicenseFile>
         <Company>Softwire</Company>
         <Authors>Softwire</Authors>
+        <AssemblyVersion>2.1.0.0</AssemblyVersion>
+        <FileVersion>2.1.0.0</FileVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
