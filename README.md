@@ -21,6 +21,16 @@ Versions `2.1` and `3.0-alpha` are available
 No API changes. No Migration required.
 MIT License was added.
 
+### Migration from v2.1 to v3.0-alpha
+
+Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate:
+
+* The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
+* `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
+* `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m => m.SingleString, "a", "b", "c" )`.
+* `WithCollection(...)` is now `WithEnumerable(...)`.
+* The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
+
 ## Use in a .Net Framework project
 
 As of version 2.0, this library has been migrated to .NETStandard, to enable use in .NETCore projects.
@@ -292,16 +302,6 @@ public void WeirdStatefulBuilder()
 ```
 
 Note that such usages are stretching this library beyond the bounds of what it is intended for. You're likely better off building all the monsters up-front, and then updating them after the fact!
-
-### Migration to v3.0
-
-Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate:
-
-* The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
-* `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
-* `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m => m.SingleString, "a", "b", "c" )`.
-* `WithCollection(...)` is now `WithEnumerable(...)`.
-* The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
 
 ## TODOs
 
