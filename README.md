@@ -26,10 +26,14 @@ MIT License was added.
 Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate:
 
 * The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
+* `With(m => m.SubObject, someExistingObject)` intended re-use the same object on every TInstance, is now `WithSharedRef(m => m.SubObject, someExistingObject)`.
 * `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
 * `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithSequentialFrom(m => m.SingleString, "a", "b", "c" )`.
 * `WithCollection(...)` is now `WithCreateEnumerableFrom(...)`.
+* `Add(...)` is now `WithAddToCollection(...)`.
 * The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
+
+The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
 
 ## Use in a .Net Framework project
 
@@ -312,10 +316,6 @@ public void WeirdStatefulBuilder()
 
 Note that such usages are stretching this library beyond the bounds of what it is intended for. You're likely better off building all the monsters up-front, and then updating them after the fact!
 
-* `With(m => m.SubObject, someExistingObject)` intended re-use the same object on every TInstance, is now `WithSharedRef(m => m.SubObject, someExistingObject)`.
-* `Add(...)` is now `WithAddToCollection(...)`.
-
-The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
 ## TODOs
 
 * Add support for Builders for objects with no default constructor.
