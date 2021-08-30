@@ -88,7 +88,7 @@ namespace LochNessBuilder
         {
             if (!BuilderFactoryMethods.ContainsKey(typeof(TInstance)))
             {
-                throw new Exception($"No Builder was registered for the type '{targetType.ToString()}'. Please add the `[BuilderFactory]` attribute to the Class declaring the Builder, or use the `.WithNew()` or `.WithFactory()` method calls.");
+                throw new Exception($"No Builder was registered for the type '{typeof(TInstance).ToString()}'. Please add the `[BuilderFactory]` attribute to the Class declaring the Builder, or use the `.WithNew()` or `.WithFactory()` method calls.");
             }
 
             var availableFactories = BuilderFactoryMethods[typeof(TInstance)];
