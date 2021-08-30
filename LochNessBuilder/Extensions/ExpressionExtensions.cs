@@ -43,7 +43,7 @@ namespace LochNessBuilder.Extensions
          * In most *realistic* situations, we will be fine to convert the value, rather than the Property.
          * But it is entirely possible to write code that compiles, but which can't execute:
          *     `.With(obj => obj.ChildTypeProp, new ParentType())`
-         * Like in the obj.ShortProp example, this will compile, as it can be interpretted as:
+         * Like in the obj.ShortProp example, this will compile, as it can be interpreted as:
          *     `.With<ParentType>(obj => (ParentType)(obj.ChildTypeProp), new ParentType())`
          * but it cannot possibly succeed, as it is not possible to assign a `new ParentType()` to `obj.ChildTypeProp`.
          * The relevant ArgumentException will be thrown, on the `.With()` call, and the user should be able to fix the mis-usages.
