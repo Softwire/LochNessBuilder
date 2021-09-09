@@ -77,8 +77,8 @@ namespace Tests
         }
         #endregion
 
-        #region Registered Builder
-        public class DedicatedTestCase_RegisteredBuilder
+        #region With Defined Builder
+        public class DedicatedTestCase_WithDefinedBuilder
         {
             public SubObj Sub { get; set; }
 
@@ -88,18 +88,17 @@ namespace Tests
             }
         }
 
-        [BuilderFactory]
-        public class RegisteredBuilder
+        public class TestBuilder
         {
-            public static Builder<DedicatedTestCase_RegisteredBuilder.SubObj> New =>
-                Builder<DedicatedTestCase_RegisteredBuilder.SubObj>.New
+            public static Builder<DedicatedTestCase_WithDefinedBuilder.SubObj> New =>
+                Builder<DedicatedTestCase_WithDefinedBuilder.SubObj>.New
                     .With(o => o.X, 4);
         }
 
         [Test]
-        public void WithNew_IgnoresRegisteredBuilders()
+        public void WithNew_IgnoresAvailableBuilders()
         {
-            var output = Builder<DedicatedTestCase_RegisteredBuilder>.New.WithNew(o => o.Sub).Build();
+            var output = Builder<DedicatedTestCase_WithDefinedBuilder>.New.WithNew(o => o.Sub).Build();
             output.Sub.Should().NotBeNull();
             output.Sub.X.Should().NotBe(4);
             output.Sub.X.Should().Be(0);

@@ -14,7 +14,6 @@ namespace Tests
         public List<string> Sounds { get; set; }
     }
 
-    [BuilderFactory]
     internal static class SimpleMonsterBuilder
     {
         public static Builder<SimpleMonster> New

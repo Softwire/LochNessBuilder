@@ -41,7 +41,6 @@ namespace Tests
         public string Name { get; set; }
     }
 
-    [BuilderFactory]
     internal static class ComplexMonsterBuilder
     {
         public static Builder<ComplexMonster> New
@@ -70,11 +69,11 @@ namespace Tests
                     .WithAddToCollection(m => m.FavouriteFood, "People")                                // All monsters like to eat people, in addition to anything that could have been configured prior to this point.
                                                                                                         // (Obviously the more natural way to achieve that would be to include it in the previous Factory, but we want to demonstrate this .WithAddToCollection method.)
 
-                    .WithFactory(m => m.Age, () => rand.Next(6))                                 // Age might be 2, 4, 1, 4, 6, 3 ...
+                    .WithFactory(m => m.Age, () => rand.Next(6))                                        // Age might be 2, 4, 1, 4, 6, 3 ...
                     
                     .WithBuilder(m => m.HolidayLake, MinimalLakeBuilder.New)                            // All monsters will have this.HomeLake populated with the result of "LakeBuilder.Minimal.Build()".
                     
-                    .WithBuilt(m => m.HomeLake)                                                         // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered BuilderFactory
+                    .WithBuilder(m => m.HomeLake, LakeBuilder.New)                                      // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered BuilderFactory
                     
                     .WithNew(m => m.Egg)                                                                // All monsters will have this.Egg populated with "new Egg()".
                     
@@ -127,7 +126,6 @@ namespace Tests
         }
     }
 
-    [BuilderFactory]
     internal static class LakeBuilder
     {
         public static Builder<Lake> New
