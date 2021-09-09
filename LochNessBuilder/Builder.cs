@@ -317,31 +317,7 @@ namespace LochNessBuilder
 
         #endregion
 
-        #region WithBuilt/Builder
-        /// <summary>
-        /// Sets a property on the TInstance, with a value built by the registered builder for the type of the property (or just new object() if nothing registered)
-        /// </summary>
-        /// <typeparam name="TProp">The type of the property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithBuilt<TProp>(Expression<Func<TInstance, TProp>> selector) where TProp : class, new()
-        {
-            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>);
-        }
-
-        /// <summary>
-        /// Sets an IEnumerable property on the TInstance, with values built by the registered builder for the type inside the property (or just new object() if nothing registered)
-        /// </summary>
-        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the property to set.</param>
-        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
-        public Builder<TInstance> WithBuilt<TProp>(
-            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
-            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
-            where TProp : class, new()
-        {
-            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>, numberOfValues);
-        }
-
+        #region WithBuilder
         /// <summary>
         /// Sets a property on the TInstance, with a value built by the provided builder.
         /// </summary>

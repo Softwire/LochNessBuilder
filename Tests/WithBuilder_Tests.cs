@@ -22,31 +22,28 @@ namespace Tests
             }
         }
 
-        [BuilderFactory]
-        public class RegisteredBuilder
+        public class FirstBuilder
         {
             public static Builder<TestClass.SubObj> New => Builder<TestClass.SubObj>.New.With(subObj => subObj.StringProp, "BuilderOne");
         }
 
-        public class UnregisteredBuilder
+        public class SecondBuilder
         {
             public static Builder<TestClass.SubObj> New => Builder<TestClass.SubObj>.New.With(subObj => subObj.StringProp, "BuilderTwo");
             public static Builder<TestClass.SubObj> WithIds => Builder<TestClass.SubObj>.New.WithSequentialIds(subObj => subObj.Id);
         }
 
-        //QQ Builder for Parents ??
-
         [Test]
-        public void WithBuilder_CanUseRegisteredBuilderToCreateObject()
+        public void WithBuilder_CanUseBuilderToCreateObject()
         {
-            var output = Builder<TestClass>.New.WithBuilder(o => o.Sub, RegisteredBuilder.New).Build();
+            var output = Builder<TestClass>.New.WithBuilder(o => o.Sub, FirstBuilder.New).Build();
             output.Sub.StringProp.Should().Be("BuilderOne");
         }
 
         [Test]
-        public void WithBuilder_CanUseUnregisteredBuilderToCreateObject()
+        public void WithBuilder_CanUseADifferentBuilderToCreateObject()
         {
-            var output = Builder<TestClass>.New.WithBuilder(o => o.Sub, UnregisteredBuilder.New).Build();
+            var output = Builder<TestClass>.New.WithBuilder(o => o.Sub, SecondBuilder.New).Build();
             output.Sub.StringProp.Should().Be("BuilderTwo");
         }
 
@@ -88,7 +85,7 @@ namespace Tests
         [Test]
         public void WithBuilder_CanPopulateAnIEnumerable()
         {
-            var output = Builder<TestClass>.New.WithBuilder(o => o.SubList, UnregisteredBuilder.WithIds, 4).Build();
+            var output = Builder<TestClass>.New.WithBuilder(o => o.SubList, SecondBuilder.WithIds, 4).Build();
             output.SubList.Should().NotBeNull();
             output.SubList.Should().HaveCount(4);
         }
@@ -96,7 +93,7 @@ namespace Tests
         [Test]
         public void WithBuilder_UsesTheDefaultCountWhenPopulatingAnIEnumerable()
         {
-            var output = Builder<TestClass>.New.WithBuilder(o => o.SubList, UnregisteredBuilder.WithIds).Build();
+            var output = Builder<TestClass>.New.WithBuilder(o => o.SubList, SecondBuilder.WithIds).Build();
             output.SubList.Should().NotBeNull();
             output.SubList.Should().HaveCount(3);
         }
@@ -104,7 +101,7 @@ namespace Tests
         [Test]
         public void WithBuilder_ReusesTheSameBuilderWhenPopulatingIEnumerables()
         {
-            var outputs = Builder<TestClass>.New.WithBuilder(o => o.SubList, UnregisteredBuilder.WithIds, 4).Build(3);
+            var outputs = Builder<TestClass>.New.WithBuilder(o => o.SubList, SecondBuilder.WithIds, 4).Build(3);
             outputs.SelectMany(obj => obj.SubList.Select(sub => sub.Id)).Should().OnlyHaveUniqueItems();
         }
     }
