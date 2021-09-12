@@ -85,7 +85,7 @@ namespace LochNessBuilder
         /// <summary>
         /// Performs an arbitrary action on the TInstance, in order with other steps defined.
         /// </summary>
-        public Builder<TInstance> WithSetup(Action<TInstance> setup)
+        public Builder<TInstance> WithCustomSetup(Action<TInstance> setup)
         {
             return new Builder<TInstance>(Blueprint.Plus(setup), PostBuildBlueprint);
         }
@@ -106,7 +106,7 @@ namespace LochNessBuilder
          *  called by WithSharedRef()
          *
          * WithFactory() : Base method
-         *  called by WithBuilt/Builder()
+         *  called by WithBuilder()
          *  called by WithCreateEnumerableFrom()
          *  called by WithSequentialFrom()
          *    called by WithSequentialIds()
