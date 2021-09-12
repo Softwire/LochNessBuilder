@@ -158,7 +158,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
   * This assumes that an earlier setup method (or possibly the object constructor) has initialised the ICollection beforehand.
 * ##### `WithPreBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *before* all the other things.
-* ##### `WithSetup()`
+* ##### `WithCustomSetup()`
   * Do an arbitrary action to the object being created.
 * ##### `WithPostBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *after* all the other things (even in other setup methods are called after this one).
@@ -221,7 +221,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
                     .WithBuilt(m => m.HomeLake)                                             // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered Builder (and 'New' is used preferentially)
                     .WithBuilt(m => m.Egg)                                                  // All monsters will have this.Egg populated with "new Egg()", because no builder has been registered for Eggs.
                     .WithPostBuildSetup(IncludeMonsterInHomeLake)                           // `this.LakeId`, and `this.HomeLake.Monsters` will be updated to honour `this.HomeLake` ... but only at the END of setup. i.e. honouring any later-defined overrides of `this.HomeLake` if configured.
-                    .WithSetup(m =>                                                         // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
+                    .WithCustomSetup(m =>                                                         // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
                         {
                             if (m.Age > 3)
                             {
@@ -302,7 +302,7 @@ public void WeirdStatefulBuilder()
     int previousId = 0;
     var monsters = Builder<Monster>.New
         .WithSequentialIds(m => m.Id)
-        .WithSetup(m =>
+        .WithCustomSetup(m =>
             {
                 m.Age = previousId;
                 previousId = m.Id;

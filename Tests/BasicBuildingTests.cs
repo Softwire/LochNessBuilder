@@ -75,7 +75,7 @@ namespace Tests
         public void MultiBuildIsEager()
         {
             var counter = 0;
-            SimpleMonsterBuilder.New.WithSetup(_ => {counter++;} ).Build(5);
+            SimpleMonsterBuilder.New.WithCustomSetup(_ => {counter++;} ).Build(5);
 
             counter.Should().Be(5);
         }
@@ -136,7 +136,7 @@ namespace Tests
             int previousId = 0;
             var monsters = Builder<SimpleMonster>.New
                 .WithSequentialIds(m => m.Id)
-                .WithSetup(m =>
+                .WithCustomSetup(m =>
                 {
                     m.Age = previousId;
                     previousId = m.Id;
