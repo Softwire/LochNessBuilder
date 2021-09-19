@@ -51,37 +51,7 @@ The broad changes to the API were to avoid reliance on Type-based differences in
 
 A pre-release v3.0 was released to Nuget to support anyone that had used the erroneously published `v2.0` (see above)
 Both those versions were a mid-way state between `v2.1` and `v4.0`.
-If you used either of those versions and need specific details of the API changes between that and `v4.0`, then please see this GH Issue:
-<LINK TBC>
-
-<To be moved to GH>
-
-### Migration from v2.1 to v3.0-alpha
-
-Lots of method/type names have changed between `v2.1` and `v3.0`, but there's very little _functionality_ change, so it should be very easy to migrate:
-
-* The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
-* `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
-* `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m => m.SingleString, "a", "b", "c" )`.
-* `WithCollection(...)` is now `WithEnumerable(...)`.
-* The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
-
-### Migration from v3.0-alpha to v4.0
-
-A Bunch more method/type names have changed between `v3.0` and `v4.0`, but there's very little _functionality_ change, so it should be very easy to migrate:
-
-* The `WithBuilt()` method has been entirely removed, as has the `[BuilderFactory]` attribute that it used.
-  * The `WithBuilt(m => m.SubObject)` method call, intended to identify and use a Registered Builder, is identical to `WithBuilder(m => m.SubObject, TheRegisteredBuilder.New)`. Use the latter wherever you were using the former, explicitly specifying the builder which previously had the `[BuilderFactory]` attribute.
-  * The `WithBuilt(m => m.SubObject)` method call, intended to use the default constructor of the object (i.e. *without* a Builder defined), is now `WithNew(m => m.SubObject)`
-* The `With(m => m.SubObject, someExistingObject)` method call, intended re-use the same `someExistingObject` on every built object, is now `WithSharedRef(m => m.SubObject, someExistingObject)`.
-* `With(m => m.Prop, value)` is now constrained to primitives and other value Types (specifically `where TProp : struct`) to enforce the use of `WithSharedRef` where that's intended.
-* The `WithOneOf(m => m.SingleString, "a", "b", "c" )` method call, intended to loop over values, is now `WithSequentialFrom(m => m.SingleString, "a", "b", "c" )`.
-* `WithEnumerable(...)` is now `WithCreateEnumerableFrom(...)`.
-* `Add(...)` is now `WithAddToCollection(...)`.
-* `WithSetup(...)` is now `WithCustomSetup(...)`.
-* `Build(n)` method is now Eager, returning the result in a `List`, rather than a Lazy `IEnumerable`.
-
-The broad changes to the API were to avoid reduce reliance on Type-based differences in method overload, thereby adding clarity and allowing for more possible behaviours, improving discoverability of the available options.
+If you used either of those versions and need specific details of the API changes between that and `v4.0`, then please see [GH Issue 12](https://github.com/Softwire/LochNessBuilder/issues/12).
 
 ## Use in a .Net Framework project
 
