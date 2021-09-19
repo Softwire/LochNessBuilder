@@ -1,8 +1,13 @@
 # LochNessBuilder
 
 LochNessBuilder is a C# Test Object Builder library to automate and commonise creation of objects for tests.
-The intended usage is NOT that you create a new builder for each test, or even for each test class. Rather, that you'll define one or two builders for each major object in your domain, which set up a set of sensible default values for those objects, and set up relationships with all the other major objects that it a given test object linked to.
-Then in the individual tests or test classes, you use the default builder and apply further configurations **only** to those additional properties that you *actively* care about in those specific tests.
+
+The intended/recommended usage, is that you define one (or a small number) of default builders for each major objects in your domain.
+Then, in individual tests or test classes, you use that default builder and apply further configurations **only** to those additional properties that you *actively* care about in those specific tests.
+The default builders are responsible for setting up sensible default general values for those objects, and configuring relationships with any of the other major objects that a given test object might be linked to - all the stuff that needs to be present for a test to run smoothly, but isn't **actually** what the test cares about.
+i.e. We imagine that you *won't* be creating a new builder for each test, or even for each test class.
+
+If you want to add your own custom build methods, say `WithCommonComplexSetupStepThatNeedsToBeSpecifiedInLotsOfTheTestsBasedOnX(x)`, then you can define those as extension methods against `Builder<OurDomainObject>`.
 
 Note that v4.0 has made a lot of superficial changes to the API. See below for details.
 
@@ -13,13 +18,15 @@ Note that v4.0 has made a lot of superficial changes to the API. See below for d
 This version was released inadvertantly and has been deprecated and de-listed from nuget.org
 Versions `2.1` and `4.0` are available, and the latter should be used if possible.
 
-* If you wanted "`v1.x` but on .NET Standard", then use `v2.1`.
-* If you wanted a version with the updated API, then use `v4.0`, and see migration notes below.
+* If you wanted "Unchanged `v1.x` API, but on .NET Standard", then use `v2.1`.
+* If you wanted the updated API, then use `v4.0` (Compatible with any remotely modern .NET version), and see migration notes below.
 
 ### Migration from v1.0 to v2.1
 
-Added Support for .NET Standard. See '## Use in a .Net Framework project' below.
+Added Support for .NET Standard. See ['Use in a .Net Framework project'](#use-in-a-net-framework-project) below.
+
 No API changes. No C# Code Migration required.
+
 MIT License was added.
 
 ### Migration from v2.1 to v4.0
@@ -38,7 +45,7 @@ Lots of method/type names have changed between `v2.1` and `v4.0`, but there's ve
 * `WithSetup(...)` is now `WithCustomSetup(...)`.
 * `Build(n)` method is now Eager, returning the result in a `List`, rather than a Lazy `IEnumerable`.
 
-The broad changes to the API were to avoid reduce reliance on Type-based differences in method overload, thereby adding clarity and allowing for more possible behaviours, improving discoverability of the available options.
+The broad changes to the API were to avoid reliance on Type-based differences in method overload, thereby adding clarity and allowing for more possible behaviours, improving discoverability of the available options.
 
 ### Migration via v3.0-alpha, or v2.0.0
 
@@ -100,10 +107,9 @@ public class Monster
     public List<string> Sounds { get; set; }
 }
 
-[BuilderFactory]
 public static class MonsterBuilder
 {
-    public static Builder<Monster> New
+    public static Builder<Monster> Default
     {
         get
         {
@@ -120,14 +126,14 @@ public static class MonsterBuilder
 To build a single `Monster`
 
 ```csharp
-Monster testMonster = MonsterBuilder.New.Build();
+Monster testMonster = MonsterBuilder.Default.Build();
 // testMonster has Id = 1, Colour = "Green", Age = 3.
 ```
 
 To build multiple `Monster`s
 
 ```csharp
-List<Monster> testMonsters = MonsterBuilder.New.Build(5);
+List<Monster> testMonsters = MonsterBuilder.Default.Build(5);
 // testMonsters has 5 Monsters, with Ids of respectively 1, 2, 3, 4, 5, but all have the same Colour and Age.
 // Each monster is fully built before the next monster is started.
 ```
@@ -135,7 +141,7 @@ List<Monster> testMonsters = MonsterBuilder.New.Build(5);
 To build multiple `Monster`s, at different points in time, but retaining any stateful properties of the `Builder` (e.g. Id Sequences)
 
 ```csharp
-Builder<Monster> monsterBuilder = MonsterBuilder.New;
+Builder<Monster> monsterBuilder = MonsterBuilder.Default;
 Monster earlyMonster = monsterBuilder.Build();         // earlyMonster has Id=1
 // Do some testing stuff.
 // ...
@@ -147,7 +153,7 @@ Monster lateMonster = monsterBuilder.Build();          // lateMonster has Id=2
 To build a Monster, but override a particular property that has previously been configured
 
 ```csharp
-Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
+Monster youngMonsters = MonsterBuilder.Default.With(t => t.Age, 1).Build(4);
 // youngMonsters will have Id 1-4, and be "Green" but will now have Age = 1, despite the configuration defined in the initial MonsterBuilder.
 // Note that the original assignment from the original Builder has still *run*; we've simply overwritten the value later.
 ```
@@ -173,7 +179,7 @@ There are further docs down below, but some particular notes on common situation
 
 ### Setup Methods
 
-Please examine the XML docs for full details. However, in simplified form, we have:
+Please examine the XML docs in your IDE for full details. However, in simplified form, we have:
 
 * ##### `With()`
   * Sets a property to a value.
@@ -241,7 +247,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 
     public static class MonsterBuilder
     {
-        public static Builder<Monster> New
+        public static Builder<Monster> Default
         {
             get
             {
@@ -269,7 +275,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 
                     .WithFactory(m => m.Age, () => rand.Next(6))                                        // Age might be 2, 4, 1, 4, 6, 3 ...
                     
-                    .WithBuilder(m => m.HomeLake, LakeBuilder.New)                                      // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered BuilderFactory
+                    .WithBuilder(m => m.HomeLake, LakeBuilder.Default)                                      // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()"
                     
                     .WithBuilder(m => m.HolidayLake, LakeBuilder.Minimal)                               // All monsters will have this.HolidayLake populated with the result of "LakeBuilder.Minimal.Build()".
 
@@ -323,7 +329,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
             }
         }
 
-        public static Builder<Lake> New
+        public static Builder<Lake> Default
         {
             get
             {

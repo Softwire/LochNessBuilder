@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using LochNessBuilder;
@@ -36,31 +37,51 @@ namespace Tests
         #region Multiple Ctors
         public class DedicatedTestCase_MultipleCtors
         {
-            public SubObj Sub { get; set; }
+            public SubObject SubObjectProp { get; set; }
 
-            public class SubObj
+            public class SubObject
             {
                 public int X { get; set; }
 
-                public SubObj() : this(3) { }
-                public SubObj(int x) { X = x + 4; }
+                public SubObject() : this(3) { }
+                public SubObject(int x) { X = x + 4; }
             }
         }
 
         [Test]
-        public void WithNew_CanCopeWithMultipleCtorsExisting()
+        public void WithNew_UsesParameterlessConstructor_WhenMultipleContructorsExist()
         {
-            var output = Builder<DedicatedTestCase_MultipleCtors>.New.WithNew(o => o.Sub).Build();
-            output.Sub.Should().NotBeNull();
-            output.Sub.X.Should().Be(7); // Not '0' (if it ignored all constructors) or '4' (if it ran new SubObj(default(int))
+            var output = Builder<DedicatedTestCase_MultipleCtors>.New.WithNew(o => o.SubObjectProp).Build();
+            output.SubObjectProp.Should().NotBeNull();
+            output.SubObjectProp.X.Should().Be(7); // Not '0' (if it ignored all constructors) or '4' (if it ran new SubObject(default(int))
+        }
+
+        public class DedicatedTestCase_MultipleCtorsButNoneParameterless
+        {
+            public SubObject SubObjectProp { get; set; }
+
+            public class SubObject
+            {
+                public int X { get; set; }
+
+                public SubObject(int x) { X = x + 4; }
+                public SubObject(string y) { }
+            }
+        }
+
+        [Test]
+        public void WithNew_EnforcesAtCompileTimeThatAParameterlessConstructorMustExist()
+        {
+            //Builder<DedicatedTestCase_MultipleCtorsButNoneParameterless>.New.WithNew(o => o.SubObjectProp);
+            Assert.Pass("Because the line above does not compile, stating that DedicatedTestCase_MultipleCtorsButNoneParameterless.SubObjectProp must have a public parameterless constructor.");
         }
         #endregion
 
         #region Class Hiearchies
         public class DedicatedTestCase_ClassHierarchies
         {
-            public ParentSub SubP { get; set; }
-            public ChildSub SubC { get; set; }
+            public ParentSub SubObjectParent { get; set; }
+            public ChildSub SubObjectChild { get; set; }
 
             public class ParentSub { }
             public class ChildSub : ParentSub { }
@@ -69,20 +90,20 @@ namespace Tests
         [Test]
         public void WithNew_CanCopeClassHiearchies()
         {
-            var output = Builder<DedicatedTestCase_ClassHierarchies>.New.WithNew(o => o.SubP).WithNew(o => o.SubC).Build();
-            output.SubP.Should().NotBeNull();
-            output.SubP.Should().BeOfType<DedicatedTestCase_ClassHierarchies.ParentSub>();
-            output.SubC.Should().NotBeNull();
-            output.SubC.Should().BeOfType<DedicatedTestCase_ClassHierarchies.ChildSub>();
+            var output = Builder<DedicatedTestCase_ClassHierarchies>.New.WithNew(o => o.SubObjectParent).WithNew(o => o.SubObjectChild).Build();
+            output.SubObjectParent.Should().NotBeNull();
+            output.SubObjectParent.Should().BeOfType<DedicatedTestCase_ClassHierarchies.ParentSub>();
+            output.SubObjectChild.Should().NotBeNull();
+            output.SubObjectChild.Should().BeOfType<DedicatedTestCase_ClassHierarchies.ChildSub>();
         }
         #endregion
 
         #region With Defined Builder
         public class DedicatedTestCase_WithDefinedBuilder
         {
-            public SubObj Sub { get; set; }
+            public SubObject SubObjectProp { get; set; }
 
-            public class SubObj
+            public class SubObject
             {
                 public int X { get; set; }
             }
@@ -90,18 +111,18 @@ namespace Tests
 
         public class TestBuilder
         {
-            public static Builder<DedicatedTestCase_WithDefinedBuilder.SubObj> New =>
-                Builder<DedicatedTestCase_WithDefinedBuilder.SubObj>.New
+            public static Builder<DedicatedTestCase_WithDefinedBuilder.SubObject> New =>
+                Builder<DedicatedTestCase_WithDefinedBuilder.SubObject>.New
                     .With(o => o.X, 4);
         }
 
         [Test]
         public void WithNew_IgnoresAvailableBuilders()
         {
-            var output = Builder<DedicatedTestCase_WithDefinedBuilder>.New.WithNew(o => o.Sub).Build();
-            output.Sub.Should().NotBeNull();
-            output.Sub.X.Should().NotBe(4);
-            output.Sub.X.Should().Be(0);
+            var output = Builder<DedicatedTestCase_WithDefinedBuilder>.New.WithNew(o => o.SubObjectProp).Build();
+            output.SubObjectProp.Should().NotBeNull();
+            output.SubObjectProp.X.Should().NotBe(4);
+            output.SubObjectProp.X.Should().Be(0);
         }
         #endregion
     }

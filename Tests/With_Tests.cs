@@ -35,8 +35,9 @@ namespace Tests
         [Test]
         public void With_AssignsValueToStringProps()
         {
-            var output = Builder<TestObject>.New.With(o => o.StringProp, "Hello").Build();
-            output.StringProp.Should().Be("Hello");
+            const string value = "Hello";
+            var output = Builder<TestObject>.New.With(o => o.StringProp, value).Build();
+            output.StringProp.Should().Be(value);
         }
 
         [Test]
