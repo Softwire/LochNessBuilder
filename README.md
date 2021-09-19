@@ -128,25 +128,6 @@ Monster youngMonsters = MonsterBuilder.Default.With(t => t.Age, 1).Build(4);
 // Note that the original assignment from the original Builder has still *run*; we've simply overwritten the value later.
 ```
 
-### Notable usages and features
-
-There are further docs down below, but some particular notes on common situations and easy mistakes to make...
-
-* The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. As a result it is constrained to only those types which are passed-by-value.
-  * If you're setting an object property then you must use either `.WithSharedRef()` or `.WithFactory()` depending on whether you want different built outputs to be sharing the same child object, or to have separate freshly-made ones.
-* The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
-  * It will create distinct `IEnumerable` objects for each object built, even if you gave it an appropriate `IEnumerable` yourself - the built object will get a new `IEnumerable` collection.
-  * If you want to specifically create your `IEnumerable`, then you should either use `.WithSharedRef()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
-* Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
-  * All it actually does is call `.WithSequentialFrom(<propSelector>, Enumerable.Range(1, int.MaxValue))`, but it's a lot more readable!
-* You can use the `.WithBuilder()` methods to setup complex sub-properties, for which you've already defined `Builder`s.
-* In general, the various setup actions are executed against each object being built in the order in which they are configured on the Builder, and ALL actions are performed, even if they would be overridden by later setup actions.
-  * Thus if you configure `.With(m => m.Prop, val)` multiple times on the builder, then the resultant object will have the last value that was configured, but would have triggered any setter code associated with `m.Prop` repeatedly.
-* If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
-* `Builder` objects are immutable; each configuration method call derives a *new* `Builder` object, leaving the original one unchanged.
-  * Note that the resultant new `Builder` is *not* completely separate, in that it stills retains any shared internal state that was defined on the original.
-  * e.g. If you have a parent `Builder` that uses `.WithSequentialIds()`, and derive a further `Builder` from it, then calls to either `Builder` will increment the 'shared' next Id value.
-
 ### Setup Methods
 
 Please examine the XML docs in your IDE for full details. However, in simplified form, we have:
@@ -176,6 +157,8 @@ Please examine the XML docs in your IDE for full details. However, in simplified
   * Do an arbitrary action to the object being created, to set it up.
 * ##### `WithPostBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *after* all the other setup actions (even after other setup methods are called after this one).
+
+See end of this README for some further notes of usage and behaviour interactions.
 
 ### Full Example
 
@@ -319,6 +302,25 @@ Please examine the XML docs in your IDE for full details. However, in simplified
         }
     }
 ```
+
+### Notable usages and features
+
+Some notes on common situations and easy mistakes to make...
+
+* The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. As a result it is constrained to only those types which are passed-by-value.
+  * If you're setting an object property then you must use either `.WithSharedRef()` or `.WithFactory()` depending on whether you want different built outputs to be sharing the same child object, or to have separate freshly-made ones.
+* The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
+  * It will create distinct `IEnumerable` objects for each object built, even if you gave it an appropriate `IEnumerable` yourself - the built object will get a new `IEnumerable` collection.
+  * If you want to specifically create your `IEnumerable`, then you should either use `.WithSharedRef()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
+* Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
+  * All it actually does is call `.WithSequentialFrom(<propSelector>, Enumerable.Range(1, int.MaxValue))`, but it's a lot more readable!
+* You can use the `.WithBuilder()` methods to setup complex sub-properties, for which you've already defined `Builder`s.
+* In general, the various setup actions are executed against each object being built in the order in which they are configured on the Builder, and ALL actions are performed, even if they would be overridden by later setup actions.
+  * Thus if you configure `.With(m => m.Prop, val)` multiple times on the builder, then the resultant object will have the last value that was configured, but would have triggered any setter code associated with `m.Prop` repeatedly.
+* If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
+* `Builder` objects are immutable; each configuration method call derives a *new* `Builder` object, leaving the original one unchanged.
+  * Note that the resultant new `Builder` is *not* completely separate, in that it stills retains any shared internal state that was defined on the original.
+  * e.g. If you have a parent `Builder` that uses `.WithSequentialIds()`, and derive a further `Builder` from it, then calls to either `Builder` will increment the 'shared' next Id value.
 
 ### Sequence of function calls
 
