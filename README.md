@@ -7,7 +7,9 @@ Then, in individual tests or test classes, you use that default builder and appl
 The default builders are responsible for setting up sensible default general values for those objects, and configuring relationships with any of the other major objects that a given test object might be linked to - all the stuff that needs to be present for a test to run smoothly, but isn't **actually** what the test cares about.
 i.e. We imagine that you *won't* be creating a new builder for each test, or even for each test class.
 
-If you want to add your own custom build methods, say `WithCommonComplexSetupStepThatNeedsToBeSpecifiedInLotsOfTheTestsBasedOnX(x)`, then you can define those as extension methods against `Builder<OurDomainObject>`.
+**Note that `Builder`s are Immutable, so each configuration call creates a _new_ `Builder`, leaving the existing one untouched. (as opposed to modifying the existing Builder)**
+
+If you want to add your own custom build methods, say `WithCommonComplexSetupStepThatNeedsToBeSpecifiedInLotsOfTheTestsBasedOnX(x)`, then you can define those as extension methods against `Builder<YourDomainObject>`.
 
 Note that v4.0 has made a lot of superficial changes to the API. See below for details.
 
@@ -130,20 +132,24 @@ Monster youngMonsters = MonsterBuilder.Default.With(t => t.Age, 1).Build(4);
 
 ### Setup Methods
 
-Please examine the XML docs in your IDE for full details. However, in simplified form, we have:
+Please examine the XML docs in your IDE for full details. However, in simplified form, we have the following methods.
+
+**Note that `Builder`s are immutable, and thus every one of these methods will produce a _new_ `Builder`, leaving the existing one untouched.**
 
 * ##### `With()`
   * Sets a property to a value.
 * ##### `WithSharedRef()`
   * Sets a ReferenceType property with the given object, assinging the same object ref to all output objects.
+* ##### `WithFactory()`
+  * Provide a factory method, to set a property to a newly created value each time.
 * ##### `WithSequentialFrom()`
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
 * ##### `WithSequentialIds()`
   * Sets a numeric property with increasing numbers, from 1 to int.MaxValue.
 * ##### `WithCreateEnumerableFrom()`
-  * Provide multiple values, and the builder will create the relevant container and put them all onto each new object
-* ##### `WithFactory()`
-  * Provide a factory method, to set a property to a newly created value each time.
+  * Provide multiple values (either as a params, or by passing in an `IEnumerable<T>`), and the builder will create a suitable container and put them all onto each new object
+  * Note that a new `IEnumerable<T>` will be created for each newly built object.
+  * All of the most common .NET `IEnumerable` types are supported, and a clear error message is provided if not. (In which case just use a more explicit `WithFactory()` call.)
 * ##### `WithBuilder()`
   * Like `WithFactory`, but the factory is specifically the `.Build()` method of the provided `Builder`.
 * ##### _`IEnumerable` variations of `WithFactory()`_
@@ -218,8 +224,9 @@ See end of this README for some further notes of usage and behaviour interaction
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                          // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
                     .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")     // All monsters will produce all three of these sounds.
-                                                                                                        // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
-                                                                                                        // and *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
+                    // Above is always identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                    // And also identical to ".WithFactory(m => m.Sounds, () => new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"   (given that `Sounds` is a `List<string>`)
+                    // The method will create whatever manner of IEnumerable is appropriate for the type of the property being set. All of the most common .NET `IEnumerable` types are supported.
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())                        // All monsters will get their own, distinct (initially empty) List<> object for food.
                     
@@ -228,7 +235,7 @@ See end of this README for some further notes of usage and behaviour interaction
 
                     .WithFactory(m => m.Age, () => rand.Next(6))                                        // Age might be 2, 4, 1, 4, 6, 3 ...
                     
-                    .WithBuilder(m => m.HomeLake, LakeBuilder.Default)                                      // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()"
+                    .WithBuilder(m => m.HomeLake, LakeBuilder.Default)                                  // All monsters will have this.HomeLake populated with the result of "LakeBuilder.Default.Build()"
                     
                     .WithBuilder(m => m.HolidayLake, LakeBuilder.Minimal)                               // All monsters will have this.HolidayLake populated with the result of "LakeBuilder.Minimal.Build()".
 
@@ -236,7 +243,7 @@ See end of this README for some further notes of usage and behaviour interaction
                     
                     .WithPostBuildSetup(IncludeMonsterInHomeLake)                                       // `this.LakeId`, and `this.HomeLake.Monsters` will be updated to honour `this.HomeLake` ... but only at the END of setup. i.e. honouring any later-defined overrides of `this.HomeLake` if configured.
                     
-                    .WithCustomSetup(m =>                                                                     // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
+                    .WithCustomSetup(m =>                                                               // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
                         {
                             if (m.Age > 5)
                             {
