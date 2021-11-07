@@ -1,6 +1,7 @@
 # LochNessBuilder
 
 LochNessBuilder is a C# Test Object Builder library to automate and commonise creation of objects for tests.
+Support all modern versions of .NET Framework, Core and Standard. See ['.NET Version targets'](#net-version-targets) below for more details.
 
 The intended/recommended usage, is that you define one (or a small number) of default builders for each major objects in your domain.
 Then, in individual tests or test classes, you use that default builder and apply further configurations **only** to those additional properties that you *actively* care about in those specific tests.
@@ -48,6 +49,9 @@ Lots of method/type names have changed between `v2.1` and `v4.0`, but there's ve
 * `Build(n)` method is now Eager, returning the result in a `List`, rather than a Lazy `IEnumerable`.
 
 The broad changes to the API were to avoid reliance on Type-based differences in method overload, thereby adding clarity and allowing for more possible behaviours, improving discoverability of the available options.
+
+Additionally, extended .NET version support all the way back to Framework 4.0.
+All versions of .NET Core and .NET Standard were already supported, as was .NET 5
 
 ### Migration via v3.0-alpha, or v2.0.0
 
@@ -356,6 +360,22 @@ public void WeirdStatefulBuilder()
 
 Note that such usages are stretching this library beyond the bounds of what it is intended for. You're likely better off building all the monsters up-front, and then updating them after the fact!
 
+## .NET Version targets
+
+The csproj builds a package that targets .NET Framework 4.0, 4.5, 4.5.1, 4.6.1, and .NET Standard 2.0
+Thus this should be usable in projects for built in .NET Framework 4.0 onwards, .NET Core 2.0 onwards, .NET Standard 2.0 onwards, and .NET 5
+It is actively tested against project running under the following .NET Versions:
+
+* .NET 5
+* .NET Core 3.1
+* .NET Core 2.1
+* .NET Standard 2.1
+* .NET Standard 2.0
+* .NET Framework 4.8
+* .NET Framework 4.5.2
+* .NET Framework 4.5
+* .NET Framework 4.0
+
 ## TODOs
 
 * Add support for Builders for objects with no default constructor.
@@ -378,7 +398,8 @@ Process for releasing a new NugetPackage:
   * Delete the previous version which will be sitting beside the newly produced version.
     * Note that a clean copy of the previous version will already have been kept, in `<root>\nuget\ArchivedPackages`, when it was released. Double check that it's there and if not, look through git to recreate it.
 * Deploy to Nuget!
-  * Log into nuget with an account that is part of the LochNess organisation (Fet an existing member of the org to add you if not already included)
+  * Log into nuget with an account that is part of the [LochNess nuget Organisation](https://www.nuget.org/organization/LochNess)
+    * _Get an existing member of the org to add you if not already included._
   * Go to the `Upload Package` Page ([link](https://www.nuget.org/packages/manage/upload))
   * Browse to the newly packaged file, and select it.
   * Nuget should auto-parse all the meta data and display it. Briefly review it.
