@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LochNessBuilder.Extensions
 {
-    public static class Extensions
+    internal static class Extensions
     {
-        public static IEnumerable<T> Plus<T>(this IEnumerable<T> head, T tail)
+        internal static IEnumerable<T> Plus<T>(this IEnumerable<T> head, T tail)
         {
             foreach (var item in head)
             {
@@ -16,7 +15,7 @@ namespace LochNessBuilder.Extensions
             yield return tail;
         }
 
-        public static IEnumerable<T> Plus<T>(this T head, IEnumerable<T> tail)
+        internal static IEnumerable<T> Plus<T>(this T head, IEnumerable<T> tail)
         {
             yield return head;
 
@@ -26,12 +25,15 @@ namespace LochNessBuilder.Extensions
             }
         }
 
-        public static IEnumerable<T> Times<T>(this int number, Func<T> generator)
+        internal static IEnumerable<T> Times<T>(this int number, Func<T> generator)
         {
-            return Enumerable.Range(1, number).Select(_ => generator());
+            for (int i = 0; i < number; i++)
+            {
+                yield return generator();
+            }
         }
 
-        public static IEnumerable<T> LoopInfinitely<T>(this IEnumerable<T> items)
+        internal static IEnumerable<T> LoopInfinitely<T>(this IEnumerable<T> items)
         {
             while (true)
             {
@@ -42,12 +44,21 @@ namespace LochNessBuilder.Extensions
                 }
 
                 // ReSharper disable once PossibleMultipleEnumeration
-                items.GetEnumerator().Reset();
+                try
+                {
+                    items.GetEnumerator().Reset();
+                }
+                catch (Exception)
+                {
+                    // Some IEnumerables will need this. Others won't.
+                    // Some that don't need it will actively complain about this.
+                    // So ignore any errors thrown here.
+                }
             }
             // ReSharper disable once FunctionNeverReturns
         }
 
-        public static Func<T> GetAccessor<T>(this IEnumerable<T> items)
+        internal static Func<T> GetAccessor<T>(this IEnumerable<T> items)
         {
             var enumerator = items.GetEnumerator();
 

@@ -26,9 +26,10 @@ namespace LochNessBuilder
         /// </summary>
         public static Builder<TInstance> New => new Builder<TInstance>();
 
+        #region Building
         private IEnumerable<Action<TInstance>> Blueprint { get; }
         private IEnumerable<Action<TInstance>> PostBuildBlueprint { get; }
-        private int _numberOfElementsToAddToNewIEnumerable = 3;
+        private const int NumberOfElementsToAddToNewIEnumerable = 3;
 
         /// <summary>
         /// Construct a TInstance and apply all configured steps.
@@ -42,9 +43,10 @@ namespace LochNessBuilder
         /// Construct multiple TInstances, applying all configured steps to each one in turn.
         /// (All steps are apply to the first TInstance, before the 2nd one is constructed.)
         /// </summary>
-        public IEnumerable<TInstance> Build(int quantity)
+        public List<TInstance> Build(int quantity)
         {
-            return quantity.Times(Build);
+            //We reify this collection, rather than leaving it lazy, to ensure that any side-effects have happened.
+            return quantity.Times(Build).ToList();
         }
 
         /// <summary>
@@ -69,6 +71,7 @@ namespace LochNessBuilder
 
             return result;
         }
+        #endregion
 
         #region Arbitrary Action Setups
         /// <summary>
@@ -82,7 +85,7 @@ namespace LochNessBuilder
         /// <summary>
         /// Performs an arbitrary action on the TInstance, in order with other steps defined.
         /// </summary>
-        public Builder<TInstance> WithSetup(Action<TInstance> setup)
+        public Builder<TInstance> WithCustomSetup(Action<TInstance> setup)
         {
             return new Builder<TInstance>(Blueprint.Plus(setup), PostBuildBlueprint);
         }
@@ -97,107 +100,156 @@ namespace LochNessBuilder
         #endregion
 
         /*
-         * Map of Dependencies.
+         * Map of Dependencies between setup methods
          *
-         * With() : Explicitly implemented
-         *  called by WithEnumerable()
+         * With() : Base method
+         *  called by WithSharedRef()
          *
-         * WithFactory() : Explicitly implemented
-         *  called by WithBuilt/Builder()
-         *  called by WithOneOf()
+         * WithFactory() : Base method
+         *  called by WithBuilder()
+         *  called by WithCreateEnumerableFrom()
+         *  called by WithSequentialFrom()
          *    called by WithSequentialIds()
          *
-         * Add() : Explicitly implemented
+         * WithAddToCollection() : Base method
          */
 
         #region With
+        // Note that we restrict the usage of `.With()` to (effectively) valueTypes.
+        // This is to prevent it being *unintentionally* used to set the same object on multiple TInstances.
+
         /// <summary>
-        /// Sets a property on the TInstance.
+        /// Sets a ValueType property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
         /// </summary>
-        /// <typeparam name="TProp">The type of the property being set.</typeparam>
+        /// <typeparam name="TProp">The type of the property being set. Must be a ValueType</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        /// <param name="value">
-        /// The value to assign.<br/>
-        /// Note that this value will be shared between all instances constructed by this builder
-        /// </param>
-        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value)
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value) where TProp : struct
         {
-            return With(selector, value, typeof(TProp));
+            return With_Internal(selector, value);
         }
 
-        private Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value, Type explicitValueType)
+        /// <summary>
+        /// Sets a Nullable-ValueType property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the property being set. Must be a Nullable-ValueType Type</typeparam>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> With<TProp>(Expression<Func<TInstance, TProp?>> selector, TProp? value) where TProp : struct
         {
-            var instance = GetInstance();
-            var prop = GetProp(selector, instance);
-            var val = Expression.Constant(value, explicitValueType);
-            var assign = Expression.Assign(prop, val);
+            return With_Internal(selector, value);
+        }
 
-            var result = Expression.Lambda<Action<TInstance>>(assign, instance).Compile();
-            return new Builder<TInstance>(Blueprint.Plus(result), PostBuildBlueprint);
+        /// <summary>
+        /// Sets a string property on the TInstance.
+        /// Use `.WithSharedRef()` or `.WithFactory()` if you want to set a ReferenceType.
+        /// </summary>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The string value to assign.</param>
+        public Builder<TInstance> With(Expression<Func<TInstance, string>> selector, string value)
+        {
+            return With_Internal(selector, value);
+        }
+
+        /// <summary>
+        /// Sets a single ReferenceType object to be (re-)used on ALL TInstances.
+        /// Use `.WithFactory()` to produced a distinct object on each TInstance.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the property being set. Must be a ReferenceType</typeparam>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="value">The value to assign.</param>
+        public Builder<TInstance> WithSharedRef<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value) where TProp : class
+        {
+            return With_Internal(selector, value);
+        }
+
+        /// <remarks>This only exists so that we can put type constraints and a different name for the ReferenceType case.</remarks>
+        private Builder<TInstance> With_Internal<TProp>(Expression<Func<TInstance, TProp>> selector, TProp value)
+        {
+            var val = Expression.Constant(value, typeof(TProp));
+            var settingLambda = CreateAssignmentLambdaFromPropExpressionAndValueExpression(selector, val);
+
+            return new Builder<TInstance>(Blueprint.Plus(settingLambda), PostBuildBlueprint);
         }
         #endregion
 
-        #region WithOneOf
+        #region WithSequentialFrom
         /// <summary>
-        /// Sets a property on the TInstance, based of a set of available values, looping if necessary.
+        /// Sets a property on the TInstance, taking the next value from a set of available values, looping if necessary.
         /// </summary>
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="values">An IEnumerable which will be iterated over to obtain single values to assign.</param>
-        public Builder<TInstance> WithOneOf<TProp>(Expression<Func<TInstance, TProp>> selector, IEnumerable<TProp> values)
+        public Builder<TInstance> WithSequentialFrom<TProp>(Expression<Func<TInstance, TProp>> selector, IEnumerable<TProp> values)
         {
             var factory = values.LoopInfinitely().GetAccessor();
             return WithFactory(selector, factory);
         }
 
         /// <summary>
-        /// Sets a property on the TInstance, based of a set of available values, looping if necessary.
+        /// Sets a property on the TInstance, taking the next value from a set of available values, looping if necessary.
         /// </summary>
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
         /// <param name="values">One or more values which will be looped over to obtain single values to assign.</param>
-        public Builder<TInstance> WithOneOf<TProp>(Expression<Func<TInstance, TProp>> selector, params TProp[] values)
+        public Builder<TInstance> WithSequentialFrom<TProp>(Expression<Func<TInstance, TProp>> selector, params TProp[] values)
         {
-            return WithOneOf(selector, (IEnumerable<TProp>)values);
+            return WithSequentialFrom(selector, (IEnumerable<TProp>)values);
         }
         #endregion
 
-        #region WithEnumerable
+        #region WithCreateEnumerableFrom
+        /// <summary>
+        /// Sets a property of type IEnumerable on the constructed instance.
+        /// Builds a relevant concrete object from the provided params, to satisfy the property.
+        /// </summary>
+        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
+        /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
+        /// <param name="values">One or more values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
+        public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
+        {
+            return WithCreateEnumerableFrom(selector, (IEnumerable<TProp>) values);
+        }
+
         /// <summary>
         /// Sets a property of type IEnumerable on the constructed instance.
         /// Builds a relevant concrete object from the provided IEnumerable, to satisfy the property.
         /// </summary>
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
-        /// <param name="values">An IEnumerable which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
-        public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, IEnumerable<TProp> values)
+        /// <param name="values">Values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
+        public Builder<TInstance> WithCreateEnumerableFrom<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, IEnumerable<TProp> values)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
-            var valuesInTypedIEnumerable = GetIEnumerableAsAppropriateType(values, propType);
-            return With(selector, valuesInTypedIEnumerable, propType);
+            var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
+
+            return WithFactory(selector, () => suitableIEnumerableCreator(values), propType);
         }
 
         /// <summary>
-        /// Sets a property of type IEnumerable on the constructed instance.
+        /// Given a TargetType that implements IEnumerable[T], and the type TProp, this method identifies
+        /// how to create a concrete implementation of IEnumerable[TProp] which satisfies TargetType.
         /// </summary>
-        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the IEnumerable property to set.</param>
-        /// <param name="values">One or more values which will be used to construct an appropriate concrete IEnumerable to assign to the property.</param>
-        public Builder<TInstance> WithEnumerable<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, params TProp[] values)
-        {
-            return WithEnumerable(selector, (IEnumerable<TProp>) values);
-        }
-
-        private IEnumerable<TProp> GetIEnumerableAsAppropriateType<TProp>(IEnumerable<TProp> values, Type targetType)
+        /// <remarks>
+        /// We achieve this by having a bunch of Types that we *know* how to make, and then
+        /// checking whether any of these would satisfy the TargetType.
+        /// e.g. if TargetType is ISet[T] then a List[T] is no good, but HashSet[T] will be
+        /// suitable, so construct that.
+        /// </remarks>
+        /// <typeparam name="TProp">The type of the objects which we're going to get given, to put inside the IEnumerable being handled.</typeparam>
+        private Func<IEnumerable<TProp>, IEnumerable<TProp>> EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(Type targetType)
         {
             var concreteInitialisers = new Dictionary<Type, Func<IEnumerable<TProp>, IEnumerable<TProp>>>
             {
-                { typeof(IEnumerable<TProp>), (vals) => vals },
-                { typeof(IQueryable<TProp>), (vals) => vals.AsQueryable() },
-                { typeof(TProp[]), (vals) => vals.ToArray() },
+                { typeof(IEnumerable<TProp>), (vals) => vals.ToList() }, //Call ToList() to force this to be a new object, not the same object, re-used.
+                { typeof(IQueryable<TProp>), (vals) => vals.ToList().AsQueryable() }, //As above.
                 { typeof(List<TProp>), (vals) => vals.ToList() },
+                { typeof(TProp[]), (vals) => vals.ToArray() },
                 { typeof(HashSet<TProp>), (vals) => new HashSet<TProp>(vals) },
                 { typeof(Queue<TProp>), (vals) => new Queue<TProp>(vals) },
+                { typeof(Stack<TProp>), (vals) => new Stack<TProp>(vals) },
                 { typeof(Collection<TProp>), (vals) => new Collection<TProp>(vals.ToList()) },
                 { typeof(ReadOnlyCollection<TProp>), (vals) => vals.ToList().AsReadOnly() },
             };
@@ -206,17 +258,12 @@ namespace LochNessBuilder
             {
                 if (targetType.IsAssignableFrom(concreteType))
                 {
-                    var valuesInRelevantConcreteType = concreteInitialisers[concreteType](values);
-                    return valuesInRelevantConcreteType;
+                    return concreteInitialisers[concreteType];
                 }
             }
-            
-            throw EnumerableTypeNotSupportedException(targetType);
-        }
 
-        private Exception EnumerableTypeNotSupportedException(Type propType)
-        {
-            throw new NotSupportedException("The IEnumerable handler knows how to create Array, List<>, HashSet<>, Queue<>, Collection<>, ReadOnlyCollection<>, or IQueryable<>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a standard .With() call. PropertyType was :" + propType.ToString());
+            var T = typeof(TProp).Name;
+            throw new NotSupportedException($"Attempted to populate a Property of Type '{targetType.ToString()}'. From the {T} values provided, the IEnumerable handler knows how to create {T}[], List<{T}>, HashSet<{T}>, Queue<{T}>, Collection<{T}>, ReadOnlyCollection<{T}>, or IQueryable<{T}>. Your property type can't be populated by any of those types, and is thus unsupported by this method. Please use a .WithFactory() or .WithSharedRef() call.");
         }
         #endregion
 
@@ -230,24 +277,8 @@ namespace LochNessBuilder
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
         public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory)
         {
-            var instance = GetInstance();
-            var prop = GetProp(selector, instance);
-            Expression<Func<TProp>> valueInvoker = () => valueFactory();
-            Expression setExpression;
-
-            var unaryExpression = selector.Body as UnaryExpression;
-            if (unaryExpression != null && unaryExpression.NodeType == ExpressionType.Convert)
-            {
-                setExpression = Expression.Convert(valueInvoker.Body, typeof(TProp));
-            }
-            else
-            {
-                setExpression = Expression.Assign(prop, Expression.Invoke(valueInvoker));
-            }
-
-            var setLambda = Expression.Lambda<Action<TInstance>>(setExpression, instance).Compile();
-
-            return new Builder<TInstance>(Blueprint.Plus(setLambda), PostBuildBlueprint);
+            //We don't override the valueType - we have no more information about it that the type information already being passed.
+            return WithFactory(selector, valueFactory, null);
         }
 
         /// <summary>
@@ -257,40 +288,36 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="valueFactory">A factory method to generate an value for each constructed instance.</param>
-        public Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Func<TProp> valueFactory)
+        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
+        public Builder<TInstance> WithFactory<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Func<TProp> valueFactory,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
         {
             var propType = GetDeclaredTypeOfIEnumerableProp(selector);
+            var suitableIEnumerableCreator = EstablishHowToCreateSuitableIEnumerableGivenPropContents<TProp>(propType);
 
-            return WithFactory(selector, () =>
-            {
-                var elements = _numberOfElementsToAddToNewIEnumerable.Times(valueFactory);
-                var typedElementsObject = GetIEnumerableAsAppropriateType(elements, propType);
-                return typedElementsObject;
-            });
+            return WithFactory(
+                selector,
+                () => {
+                    var elements = numberOfValues.Times(valueFactory);
+                    var typedElementsObject = suitableIEnumerableCreator(elements);
+                    return typedElementsObject;
+                },
+                propType);
         }
+
+        private Builder<TInstance> WithFactory<TProp>(Expression<Func<TInstance, TProp>> selector, Func<TProp> valueFactory, Type explicitValueType)
+        {
+            Expression<Func<TProp>> valueInvoker = () => valueFactory();
+            var settingLambda = CreateAssignmentLambdaFromPropExpressionAndValueExpression(selector, valueInvoker.Body, explicitValueType);
+
+            return new Builder<TInstance>(Blueprint.Plus(settingLambda), PostBuildBlueprint);
+        }
+
         #endregion
 
-        #region WithBuilt/Builder
-        /// <summary>
-        /// Sets a property on the TInstance, with a value built by the registered builder for the type of the property (or just new object() if nothing registered)
-        /// </summary>
-        /// <typeparam name="TProp">The type of the property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithBuilt<TProp>(Expression<Func<TInstance, TProp>> selector) where TProp : class, new()
-        {
-            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>);
-        }
-
-        /// <summary>
-        /// Sets an IEnumerable property on the TInstance, with values built by the registered builder for the type inside the property (or just new object() if nothing registered)
-        /// </summary>
-        /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
-        /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithBuilt<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector) where TProp : class, new()
-        {
-            return WithDeferredResolveBuilder(selector, BuilderRegistry.Resolve<TProp>);
-        }
-
+        #region WithBuilder
         /// <summary>
         /// Sets a property on the TInstance, with a value built by the provided builder.
         /// </summary>
@@ -308,60 +335,91 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the objects inside the IEnumerable property being set.</typeparam>
         /// <param name="selector">A delegate which specifies the property to set.</param>
         /// <param name="builder">The builder object to use to create the values.</param>
-        public Builder<TInstance> WithBuilder<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Builder<TProp> builder) where TProp : class, new()
+        /// <param name="numberOfValues">How many values should be generated and put into the IEnumerable.</param>
+        public Builder<TInstance> WithBuilder<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Builder<TProp> builder,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
+            where TProp : class, new()
         {
-            return WithDeferredResolveBuilder(selector, () => builder);
+            return WithDeferredResolveBuilder(selector, () => builder, numberOfValues);
         }
 
-        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, TProp>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        private Func<TProp> ProduceObjectFactoryThatLazilyResolvesBuilderFactory<TProp>(Func<Builder<TProp>> builderFactory) where TProp : class, new()
         {
-            Func<TProp> actionToResolveAndUseBuilderLater = () =>
+            Builder<TProp> capturedBuilder = null;
+            Func<TProp> actionToResolveBuilderOnceAndThenUseItRepeatedly = () =>
             {
-                var builder = builderFactory();
-                var element = builder.Build();
+                if (capturedBuilder == null)
+                {
+                    capturedBuilder = builderFactory();
+                }
+
+                var element = capturedBuilder.Build();
                 return element;
             };
-            return WithFactory(selector, actionToResolveAndUseBuilderLater);
+
+            return actionToResolveBuilderOnceAndThenUseItRepeatedly;
         }
 
-        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(Expression<Func<TInstance, IEnumerable<TProp>>> selector, Func<Builder<TProp>> builderFactory) where TProp : class, new()
+        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(
+            Expression<Func<TInstance, TProp>> selector,
+            Func<Builder<TProp>> builderFactory)
+            where TProp : class, new()
         {
-            var propType = GetDeclaredTypeOfIEnumerableProp(selector);
+            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory));
+        }
 
-            Func<IEnumerable<TProp>> actionToResolveAndUseBuilderLater = () =>
-            {
-                var builder = builderFactory();
-                var builtElements = builder.Build(_numberOfElementsToAddToNewIEnumerable);
-                return GetIEnumerableAsAppropriateType(builtElements, propType);
-            };
-            return WithFactory(selector, actionToResolveAndUseBuilderLater);
+        private Builder<TInstance> WithDeferredResolveBuilder<TProp>(
+            Expression<Func<TInstance, IEnumerable<TProp>>> selector,
+            Func<Builder<TProp>> builderFactory,
+            int numberOfValues = NumberOfElementsToAddToNewIEnumerable)
+            where TProp : class, new()
+        {
+            return WithFactory(selector, ProduceObjectFactoryThatLazilyResolvesBuilderFactory(builderFactory), numberOfValues);
         }
         #endregion
 
         #region WithSequentialIds
         /// <summary>
-        /// Sets an integer property on the TInstance, with sequential values starting from 1.
+        /// Sets a short, int or long property on the TInstance, with sequential values starting from 1.
         /// </summary>
+        /// <remarks>
+        /// Defining it as populating a long will transparently support all three types.
+        /// Technically it could overflow a short, but that will be obvious, and is very unlikely to happen.
+        /// </remarks>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, int>> selector)
+        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, long>> selector)
         {
-            return WithOneOf(selector, Enumerable.Range(1, int.MaxValue));
+            return WithSequentialFrom(selector, Enumerable.Range(1, int.MaxValue).Select(intVal => (long)intVal));
         }
         #endregion
 
-        #region Add
+        #region WithNew
+        /// <summary>
+        /// Sets an object property by invoking the default constructor each time.<br/>
+        /// Literally just a convenient short-hand for `WithFactory(selector, () => new TProp())`
+        /// </summary>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        public Builder<TInstance> WithNew<TProp>(Expression<Func<TInstance, TProp>> selector) where TProp : class, new()
+        {
+            return WithFactory(selector, () => new TProp());
+        }
+        #endregion
+
+        #region WithAddToCollection
         /// <summary>
         /// Adds an item to an ICollection on the TInstance.
         /// </summary>
         /// <typeparam name="TProp">The type of the objects inside the ICollection.</typeparam>
         /// <param name="selector">A delegate which specifies the target ICollection.</param>
         /// <param name="values">One or more values which will be added to the ICollection</param>
-        public Builder<TInstance> Add<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, params TProp[] values)
+        public Builder<TInstance> WithAddToCollection<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, params TProp[] values)
         {
             var builder = this;
             foreach (var value in values)
             {
-                builder = builder.Add(selector, value);
+                builder = builder.WithAddToCollection(selector, value);
             }
             return builder;
         }
@@ -372,22 +430,53 @@ namespace LochNessBuilder
         /// <typeparam name="TProp">The type of the objects inside the ICollection.</typeparam>
         /// <param name="selector">A delegate which specifies the target ICollection.</param>
         /// <param name="value">The value which will be added to the ICollection</param>
-        public Builder<TInstance> Add<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, TProp value)
+        public Builder<TInstance> WithAddToCollection<TProp>(Expression<Func<TInstance, ICollection<TProp>>> selector, TProp value)
         {
             var instance = GetInstance();
-            var collectionGetter = typeof(TInstance).GetProperty(selector.GetMemberName()).GetGetMethod();
+            var prop = GetProp(selector, instance);
+
             var addMethod = typeof(ICollection<TProp>).GetMethod("Add");
             var addParameter = Expression.Constant(value, typeof(TProp));
 
-            var getCollection = Expression.Call(instance, collectionGetter);
-            var addItem = Expression.Call(getCollection, addMethod, addParameter);
-            var addItemToCollection = Expression.Lambda<Action<TInstance>>(addItem, instance).Compile();
+            var addItem = Expression.Call(prop, addMethod, addParameter);
+            var addInTryCatch = WrapActionExpressionIn_Try_Catch_RethrowWithAdditionalMessage(addItem, $"Error occurred when attempting to '.Add' to the property '{selector.GetMemberName()}'.");
 
-            return new Builder<TInstance>(Blueprint.Plus(addItemToCollection), PostBuildBlueprint);
+            var addItemToCollectionAction = Expression.Lambda<Action<TInstance>>(addInTryCatch, instance).Compile();
+
+            return new Builder<TInstance>(Blueprint.Plus(addItemToCollectionAction), PostBuildBlueprint);
         }
+
         #endregion
 
         #region Object reflection helpers
+        private Expression WrapActionExpressionIn_Try_Catch_ThrowNewMessage(Expression coreExpression, string newMessage)
+        {
+            return
+                Expression.TryCatch(
+                    coreExpression,
+                Expression.Catch(typeof(Exception),
+                    Expression.Throw(
+                        Expression.Constant(new Exception(newMessage))
+                    )
+                ));
+        }
+
+        private Expression WrapActionExpressionIn_Try_Catch_RethrowWithAdditionalMessage(Expression coreExpression, string additionalMessage)
+        {
+            var caughtExceptionParameter = Expression.Parameter(typeof(Exception));
+
+            //We want to call `new Exception(additionalMessage, caughtException)`
+            var ctorForExceptionWithMessageAndInnerException = typeof(Exception).GetConstructor(new[] {typeof(string), typeof(Exception)});
+            var replacementExceptionExpresion = Expression.New(ctorForExceptionWithMessageAndInnerException, Expression.Constant(additionalMessage), caughtExceptionParameter);
+
+            return
+                Expression.TryCatch(
+                    coreExpression,
+                Expression.Catch(caughtExceptionParameter,
+                    Expression.Throw( replacementExceptionExpresion )
+                ));
+        }
+
         private static ParameterExpression GetInstance()
         {
             return Expression.Parameter(typeof(TInstance), typeof(TInstance).FullName);
@@ -412,6 +501,33 @@ namespace LochNessBuilder
             var instance = GetInstance();
             var prop = GetProp(selector, instance);
             return prop.Type;
+        }
+
+        private static Action<TInstance> CreateAssignmentLambdaFromPropExpressionAndValueExpression<TProp>(
+            Expression<Func<TInstance, TProp>> propSelector,
+            Expression valueExpression,
+            Type valueTypeOverride = null)
+        {
+            var instance = GetInstance();
+            var prop = GetProp(propSelector, instance);
+
+            if (valueTypeOverride != null)
+            {
+                valueExpression = Expression.Convert(valueExpression, valueTypeOverride);
+            }
+            else if (propSelector.IsUnaryConversion())
+            {
+                // In this case TProp doesn't actually represent the type of the Property, so we need to cast the 
+                // value to the correct type, and assign the result of that cast.
+                // Note that this is the opposite of the cast that the compiler has inferred, and thus the reverse cast isn't guaranteed to work!
+                // But it should work in every reasonable use-case and will error in an understandable way.
+                // See the Notes on IsUnaryConversion for further details.
+                valueExpression = Expression.Convert(valueExpression, prop.Type);
+            }
+
+            var assign = Expression.Assign(prop, valueExpression);
+
+            return Expression.Lambda<Action<TInstance>>(assign, instance).Compile();
         }
         #endregion
     }

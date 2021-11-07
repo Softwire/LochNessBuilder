@@ -1,7 +1,7 @@
 # LochNessBuilder
 
 A C# Builder library to automate and commonise creation of objects for tests.
-You can define a basic builder that wires up default values, which all tests can then use as-is, or add further customisations for specific tests.
+You can define a basic builder that wires up default values, which all tests can then use as-is, or add further customisations on top of that basic builder for specific tests.
 
 Note that v3.0 has made a lot of superficial changes to the API. See below for details
 
@@ -26,10 +26,14 @@ MIT License was added.
 Lots of method/type names have changed between v2.0 and v3.0, but there's very little _functionality_ change, so it should be very easy to migrate:
 
 * The `[Builder]` attribute is now called `[BuilderFactory]`, to better represent what it is doing.
+* `With(m => m.SubObject, someExistingObject)` intended re-use the same object on every TInstance, is now `WithSharedRef(m => m.SubObject, someExistingObject)`.
 * `With(m => m.SubObject)` intended to auto-find any existing builders, is now `WithBuilt(m => m.SubObject)`.
-* `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithOneOf(m => m.SingleString, "a", "b", "c" )`.
-* `WithCollection(...)` is now `WithEnumerable(...)`.
+* `With(m => m.SingleString, "a", "b", "c" )` intended to loop over values, is now `WithSequentialFrom(m => m.SingleString, "a", "b", "c" )`.
+* `WithCollection(...)` is now `WithCreateEnumerableFrom(...)`.
+* `Add(...)` is now `WithAddToCollection(...)`.
 * The implicit cast from `Builder<T>` to `T` has been removed. Replace it with calling `.Build()` on the builder.
+
+The broad changes to the API were to avoid overload conflicts, to improve clarity, and to try to improve discoverability of the available options.
 
 ## Use in a .Net Framework project
 
@@ -90,7 +94,7 @@ To build multiple `Monster`s, at different points in time, but retaining any sta
 
 ```csharp
 Builder<Monster> monsterBuilder = MonsterBuilder.New;
-Monster earlyMonster = monsterBuilder.Build();         // earlyMonster has Id=2
+Monster earlyMonster = monsterBuilder.Build();         // earlyMonster has Id=1
 // Do some testing stuff.
 // ...
 // then later
@@ -102,7 +106,7 @@ To build a Monster, but override a particular property that has previously been 
 
 ```csharp
 Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
-// youngMonsters will have Id 1-4, and be "Green" but will now have Age = 1, despite the configuration defined in the initiail MonsterBuilder.
+// youngMonsters will have Id 1-4, and be "Green" but will now have Age = 1, despite the configuration defined in the initial MonsterBuilder.
 // Note that the original assignment from the original Builder has still *run*; we've simply overwritten the value later.
 ```
 
@@ -110,28 +114,36 @@ Monster youngMonsters = MonsterBuilder.New.With(t => t.Age, 1).Build(4);
 
 There are further docs down below, but some particular notes on common situations and easy mistakes to make...
 
-* The standard `With()` will share the provided argument with all objects that get Built. If you're setting an object then you don't probably don't want that; you probably want to use `.WithFactory()`.
+* The standard `.With()` method (and also `.WithSequentialFrom()` when it loops) will share the provided value(s) with all objects that get Built. As a result it is constrained to only those types which are passed-by-value.
+  * If you're setting an object property then you must use either `.WithSharedRef()` or `.WithFactory()` depending on whether you want different outputs to have different objects, or not.
+* The `.WithCreateEnumerableFrom()` should only be used if you want to make use of its ability to create most kinds of enumerable for you.
+  * It will create distinct `IEnumerable` objects for each object built, even if you gave it an appropriate `IEnumerable` yourself - the built object will get a new `IEnumerable` collection.
+  * If you want to specifically create your `IEnumerable`, then you should either use `.With()`, or `.WithFactory()` depending on whether you intend the enumerable to be shared or not.
 * Note the `.WithSequentialIds()` method, which will likely be useful for any Id-based properties.
-  * All it does is call `.WithOneOf(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
+  * All it does is call `.WithSequentialFrom(<propSelector>, Enumerable.Range(1, int.MaxValue))`.
 * If you have a database object with properties representing DB relations, where there is a FK int property AND a FK object property (and possibly also a collection property on the other end of the relationship), then you probably want to use `.WithPostBuildSetup()` to ensure that everything gets suitably wired up at the end, to account for later modifications applied to the Builder.
 * You can use the `.WithBuilt/Builder()` methods to setup complex sub-properties, for which you've already defined `Builder`s.
   * The "default" builders for `T`s, are ones which are `public static getters` on classes tagged with `[BuilderFactory]`.
   * So if you want to define multiple `Builder<T>` properties, then you won't be able to use `.WithBuilt()` and should use `.WithBuilder()` instead.
   * Equally if you're not using "default" builders, then there's no need to include the `[BuilderFactory]` attribute.
   * If no defined `Builder` is found, then the "default" `Builder` is just one that calls `new()` on its target.
-* `Builder` objects are immutable; each method call returns a *new* `Builder` object, leaving the original one unchanged.
+* `Builder` objects are immutable; each method call derives a *new* `Builder` object, leaving the original one unchanged.
+  * Note that the resultant new `Builder` is *not* completely separate, in that it stills retains any shared internal state that was defined on the original.
+  * e.g. If you have a parent `Builder` that uses `.WithSequentialIds()`, and derive a further `Builder` from it, then calls to either `Builder` will increment the 'shared' next Id value.
 
 ### Setup Methods
 
 Please examine the XML docs for full details. However, in simplified form, we have:
 
 * ##### `With()`
-  * Set a property to a value.
-* ##### `WithOneOf()`
+  * Sets a property to a value.
+* ##### `WithSharedRef()`
+  * Sets a ReferenceType property with the given object, assinging the same object ref to all output objects.
+* ##### `WithSequentialFrom()`
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
 * ##### `WithSequentialIds()`
   * Sets a numeric property with increasing numbers, from 1 to int.MaxValue.
-* ##### `WithEnumerable()`
+* ##### `WithCreateEnumerableFrom()`
   * Provide multiple values, and the builder will create the relevant container and put them all onto each new object
 * ##### `WithFactory()`
   * Provide a factory method, to set a property to a newly created value each time.
@@ -140,13 +152,13 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 * ##### `WithBuilt()`
   * Like `WithBuilder`, but the appropriate `Builder<T>` is found automatically from any classes tagged with `BuilderFactory`, so you don't need to provide any second argument at all ... it just works it all out.
 * ##### _`IEnumerable` variations of `WithFactory()`_
-  * The above 3 variations on `WithFactory()` have overloads which simplify the work if the property in question implements `IEnumerable<T>`. Rather than defining a Factory that builds the whole `IEnumerable<T>`, so provide one which simply builds `T`s and the `IEnumerable<>` portion will get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements.
-* ##### `Add()`
-  * Add the value to the existing ICollection property.
+  * If the property you are trying to set implements `IEnumerable<T>` then there are some additional overloads of the above 3 variations on `WithFactory()`. They allow you to provide Factory/Buildrs that simply build `Ts`, rather than having to build the whole `IEnumerable<T>`. The details of the `IEnumerable<>` portion will then get worked out for you. The resultant `IEnumerable<T>` will contain 3 elements by default, or you can specify how many `T`s should be built and put into the IEnumerable, if wanted.
+* ##### `WithAddToCollection()`
+  * Add the given value to the existing ICollection property.
   * This assumes that an earlier setup method (or possibly the object constructor) has initialised the ICollection beforehand.
 * ##### `WithPreBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *before* all the other things.
-* ##### `WithSetup()`
+* ##### `WithCustomSetup()`
   * Do an arbitrary action to the object being created.
 * ##### `WithPostBuildSetup()`
   * Do an arbitrary action to the object being created, but do it *after* all the other things (even in other setup methods are called after this one).
@@ -155,7 +167,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
 
 ```csharp
    //An example of all the available methods:
-    public class Monster
+    public class MonsQQter
     {
         public int Id { get; set; }
         public string Nationality { get; set; }
@@ -197,10 +209,10 @@ Please examine the XML docs for full details. However, in simplified form, we ha
                     .WithSequentialIds(m => m.Id)                                           // Ids will be 1, 2, 3, 4, 5....
                     // Above is identical to ".With(t => t.Id, Enumerable.Range(1, int.MaxValue))"
 
-                    .WithOneOf(m => m.Colour, "Green", "Red", "Blue")                       // Monster Colors will be Green, Red, Blue, Green, Red, ...
+                    .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")              // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
-                    .WithEnumerable(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")   // All monsters will produce ALL three of these sounds.
-                    // Above is identical to ".WithEnumerable(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                    .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!") // All monsters will produce ALL three of these sounds.
+                    // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
                     // Above is *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})". The only difference is that the containing array is not shared.
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())            // All monsters will get their own, distinct (initially empty) List<> object for food.
@@ -209,7 +221,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
                     .WithBuilt(m => m.HomeLake)                                             // All monsters will have this.HomeLake populated with the result of "LakeBuilder.New.Build()", because Lake has a registered Builder (and 'New' is used preferentially)
                     .WithBuilt(m => m.Egg)                                                  // All monsters will have this.Egg populated with "new Egg()", because no builder has been registered for Eggs.
                     .WithPostBuildSetup(IncludeMonsterInHomeLake)                           // `this.LakeId`, and `this.HomeLake.Monsters` will be updated to honour `this.HomeLake` ... but only at the END of setup. i.e. honouring any later-defined overrides of `this.HomeLake` if configured.
-                    .WithSetup(m =>                                                         // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
+                    .WithCustomSetup(m =>                                                         // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
                         {
                             if (m.Age > 3)
                             {
@@ -251,7 +263,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
             {
                 return Builder<Lake>.New
                     .WithSequentialIds(t => t.Id)
-                    .WithOneOf(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Name {i}"))
+                    .WithSequentialFrom(t => t.Name, Enumerable.Range(1, int.MaxValue).Select(i => $"Name {i}"))
                     .WithFactory(t => t.Monsters, () => new HashSet<Monster>());
             }
         }
@@ -261,7 +273,7 @@ Please examine the XML docs for full details. However, in simplified form, we ha
             get
             {
                 return Minimal
-                    .Add(t => t.Monsters, new Monster())
+                    .WithAddToCollection(t => t.Monsters, new Monster())
                     .WithPostBuildSetup(TieAllMonstersToLake);
             }
         }
@@ -290,7 +302,7 @@ public void WeirdStatefulBuilder()
     int previousId = 0;
     var monsters = Builder<Monster>.New
         .WithSequentialIds(m => m.Id)
-        .WithSetup(m =>
+        .WithCustomSetup(m =>
             {
                 m.Age = previousId;
                 previousId = m.Id;
@@ -306,7 +318,6 @@ Note that such usages are stretching this library beyond the bounds of what it i
 
 ## TODOs
 
-* Unit Tests
 * Add support for Builders for objects with no default constructor.
 
 ## Creating a new Nuget Package (Dev Notes)
