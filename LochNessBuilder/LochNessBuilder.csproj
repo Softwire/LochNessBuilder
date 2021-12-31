@@ -22,7 +22,7 @@
         <Description>A C# Builder library to automate and commonise creation of objects for tests.
 Support all modern versions of .NET Framework, Core and Standard. See README for more details.
 v4.0.0 renames large portions of the API for greater clarity and discoverability. See README.</Description>
-        <PackageReleaseNotes>Large portions of the API have been renamed or deprecated. However, everything still has an explicit replacement, so migration should be easy. See detailed migration guide in README on Nuget or GitHub.</PackageReleaseNotes>
+        <PackageReleaseNotes>Added an extra convenience helper: WithSequentialsId(u => u.UserName, id => $"User {id}"), allowing a Prop to be populated with some value *derived* from the sequential Ids</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

@@ -389,9 +389,22 @@ namespace LochNessBuilder
         /// Technically it could overflow a short, but that will be obvious, and is very unlikely to happen.
         /// </remarks>
         /// <param name="selector">A delegate which specifies the property to set.</param>
-        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, long>> selector)
+        /// <param name="firstIdValue">Override the first number used, e.g. to start at 0, rather than 1.</param>
+        public Builder<TInstance> WithSequentialIds(Expression<Func<TInstance, long>> selector, int firstIdValue = 1)
         {
-            return WithSequentialFrom(selector, Enumerable.Range(1, int.MaxValue).Select(intVal => (long)intVal));
+            return WithSequentialIds(selector, intVal => (long)intVal, firstIdValue);
+        }
+
+        /// <summary>
+        /// Sets a property on the TInstance, with each Built object getting successive values generated from sequential Ids.
+        /// </summary>
+        /// <param name="selector">A delegate which specifies the property to set.</param>
+        /// <param name="idToValueFactory">A delegate which converts an int into the relevant property value.</param>
+        /// <param name="firstIdValue">Override the first number used, e.g. to start at 0, rather than 1.</param>
+        public Builder<TInstance> WithSequentialIds<TProp>(Expression<Func<TInstance, TProp>> selector, Func<int, TProp> idToValueFactory, int firstIdValue = 1)
+        {
+            var rangeLength = firstIdValue < 0 ? int.MaxValue : int.MaxValue - firstIdValue;
+            return WithSequentialFrom(selector, Enumerable.Range(firstIdValue, rangeLength).Select(idToValueFactory));
         }
         #endregion
 

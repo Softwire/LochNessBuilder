@@ -150,6 +150,8 @@ Please examine the XML docs in your IDE for full details. However, in simplified
   * Provide multiple values, and the builder will cycle through them in order, for each new object built.
 * ##### `WithSequentialIds()`
   * Sets a numeric property with increasing numbers, from 1 to int.MaxValue.
+  * Can also provide a lambda to build some other object from the sequential Ids, instead.
+  * Can override the starting value, if needed.
 * ##### `WithCreateEnumerableFrom()`
   * Provide multiple values (either as a params, or by passing in an `IEnumerable<T>`), and the builder will create a suitable container and put them all onto each new object
   * Note that a new `IEnumerable<T>` will be created for each newly built object.
@@ -220,12 +222,15 @@ See end of this README for some further notes of usage and behaviour interaction
                 return Builder<Monster>.New
                     .With(m => m.Nationality, "Scottish")                                               // All monsters will be Scottish.
 
-                    .WithSequentialIds(m => m.Id)                                                       // Ids will be 1, 2, 3, 4, 5....
-                                                                                                        // Above is identical to ".WithSequentialFrom(t => t.Id, Enumerable.Range(1, int.MaxValue))"
-
                     .WithSharedRef(m => m.CommunityLake, theBiggestLake)                                // All monsters will have a reference to the same Lake in this.CommunityLake.
 
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                          // Monster Colors will be Green, Red, Blue, Green, Red, ...
+
+                    .WithSequentialIds(m => m.Id)                                                       // Ids will be 1, 2, 3, 4, 5....
+                                                                                                        // This is identical to ".WithSequentialFrom(m => m.Id, Enumerable.Range(1, int.MaxValue))"
+
+                    .WithSequentialIds(m => m.Address, x => $"Pool {x}", 0)                             // Names will be "Pool 0", "Pool 1", "Pool 2", "Pool 3", "Pool 4", ...
+                                                                                                        // This is identical to ".WithSequentialFrom(m => m.Address, Enumerable.Range(0, int.MaxValue).Select(x => $"Pool {x}"))"
 
                     .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")     // All monsters will produce all three of these sounds.
                     // Above is always identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
@@ -396,7 +401,7 @@ Process for releasing a new NugetPackage:
   * Clean and Rebuild the solution, which will automatically package everything up for you.
     * The newly created package will be dropped in the `<root>\nuget` folder.
   * Delete the previous version which will be sitting beside the newly produced version.
-    * Note that a clean copy of the previous version will already have been kept, in `<root>\nuget\ArchivedPackages`, when it was released. Double check that it's there and if not, look through git to recreate it.
+    * Note that a clean copy of the previous version should already have been kept, in `<root>\nuget\ArchivedPackages`, when it was released. Double check that it's there and if not, look through git to recreate it.
 * Deploy to Nuget!
   * Log into nuget with an account that is part of the [LochNess nuget Organisation](https://www.nuget.org/organization/LochNess)
     * _Get an existing member of the org to add you if not already included._

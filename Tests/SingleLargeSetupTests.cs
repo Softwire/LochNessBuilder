@@ -10,6 +10,7 @@ namespace Tests
     internal class ComplexMonster
     {
         public int Id { get; set; }
+        public string Address { get; set; }
         public string Nationality { get; set; }
         public string Colour { get; set; }
         public int Age { get; set; }
@@ -53,15 +54,18 @@ namespace Tests
                 return Builder<ComplexMonster>.New
                     .With(m => m.Nationality, "Scottish")                                               // All monsters will be Scottish.
 
-                    .WithSequentialIds(m => m.Id)                                                       // Ids will be 1, 2, 3, 4, 5....
-                                                                                                        // Above is identical to ".WithSequentialFrom(t => t.Id, Enumerable.Range(1, int.MaxValue))"
-
                     .WithSharedRef(m => m.CommunityLake, theBiggestLake)                                // All monsters will have a reference to the same Lake in this.CommunityLake.
 
                     .WithSequentialFrom(m => m.Colour, "Green", "Red", "Blue")                          // Monster Colors will be Green, Red, Blue, Green, Red, ...
 
+                    .WithSequentialIds(m => m.Id)                                                       // Ids will be 1, 2, 3, 4, 5....
+                                                                                                        // This is identical to ".WithSequentialFrom(m => m.Id, Enumerable.Range(1, int.MaxValue))"
+
+                    .WithSequentialIds(m => m.Address, x => $"Pool {x}", 0)                             // Names will be "Pool 0", "Pool 1", "Pool 2", "Pool 3", "Pool 4", ...
+                                                                                                        // This is identical to ".WithSequentialFrom(m => m.Address, Enumerable.Range(0, int.MaxValue).Select(x => $"Pool {x}"))"
+
                     .WithCreateEnumerableFrom(m => m.Sounds, "Rarrrgggh!", "Screech!", "Wooooosh!")     // All monsters will produce all three of these sounds.
-                                                                                                        // Above is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
+                                                                                                        // This is identical to ".WithCreateEnumerableFrom(m => m.Sounds, new List<string>{"Rarrrgggh!", "Screech!", "Woooooh!"})"
                                                                                                         // and *almost* identical to ".With(m => m.Sounds, new []{"Rarrrgggh!", "Screech!", "Woooooh!"})" (only difference is that the containing array is not shared.)
 
                     .WithFactory(m => m.FavouriteFood, () => new List<string>())                        // All monsters will get their own, distinct (initially empty) List<> object for food.
@@ -79,7 +83,7 @@ namespace Tests
                     
                     .WithPostBuildSetup(IncludeMonsterInHomeLake)                                       // `this.LakeId`, and `this.HomeLake.Monsters` will be updated to honour `this.HomeLake` ... but only at the END of setup. i.e. honouring any later-defined overrides of `this.HomeLake` if configured.
                     
-                    .WithCustomSetup(m =>                                                                     // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
+                    .WithCustomSetup(m =>                                                               // Runs this arbitrary logic against the monster. (But these values could be overridden by later Steps.)
                         {
                             if (m.Age > 5)
                             {
@@ -176,6 +180,7 @@ namespace Tests
             var testMonster = ComplexMonsterBuilder.New.Build();
 
             testMonster.Id.Should().Be(1);
+            testMonster.Address.Should().Be("Pool 0");
             testMonster.Nationality.Should().Be("Scottish");
             testMonster.Age.Should().BeInRange(0, 6);
 
@@ -256,6 +261,7 @@ namespace Tests
             var testMonster = ComplexMonsterBuilder.New.Build(5).Last();
 
             testMonster.Id.Should().Be(5);
+            testMonster.Address.Should().Be("Pool 4");
 
             var expectedColour = testMonster.Age <= 5 ? "Red" : "Black";
             testMonster.Colour.Should().Be(expectedColour);
