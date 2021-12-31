@@ -2,10 +2,10 @@
 
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net40;net45;net451;net461</TargetFrameworks>
-        <PackageVersion>4.1.0</PackageVersion>
-        <Version>4.1.0</Version>
-        <AssemblyVersion>4.1.0.0</AssemblyVersion>
-        <FileVersion>4.1.0.0</FileVersion>
+        <PackageVersion>4.1.1</PackageVersion>
+        <Version>4.1.1</Version>
+        <AssemblyVersion>4.1.1.0</AssemblyVersion>
+        <FileVersion>4.1.1.0</FileVersion>
         <Title>LochNessBuilder</Title>
         <AssemblyTitle>LochNessBuilder</AssemblyTitle>
         <Product>LochNessBuilder</Product>
